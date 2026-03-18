@@ -67,7 +67,7 @@ function createMainIcon(size) {
       fill="#94a3b8"
       text-anchor="middle"
       letter-spacing="${size * 0.015}"
-    >ALPHA BRAVO</text>
+    >ALPHA BRAVO QUIZ</text>
   </svg>`;
   return svg;
 }
@@ -115,7 +115,7 @@ function createAdaptiveForeground(size) {
       fill="#94a3b8"
       text-anchor="middle"
       letter-spacing="${size * 0.012}"
-    >ALPHA BRAVO</text>
+    >ALPHA BRAVO QUIZ</text>
   </svg>`;
   return svg;
 }
@@ -157,7 +157,7 @@ function createMonochrome(size) {
       fill="white"
       text-anchor="middle"
       letter-spacing="${size * 0.012}"
-    >ALPHA BRAVO</text>
+    >ALPHA BRAVO QUIZ</text>
   </svg>`;
   return svg;
 }
@@ -201,7 +201,7 @@ function createSplashIcon(size) {
       fill="#94a3b8"
       text-anchor="middle"
       letter-spacing="${size * 0.018}"
-    >ALPHA BRAVO</text>
+    >ALPHA BRAVO QUIZ</text>
   </svg>`;
   return svg;
 }
@@ -319,7 +319,7 @@ function createFeatureGraphic(width, height) {
       fill="#e2e8f0"
       text-anchor="middle"
       letter-spacing="8"
-    >ALPHA BRAVO</text>
+    >ALPHA BRAVO QUIZ</text>
 
     <!-- Tagline -->
     <text

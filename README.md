@@ -1,4 +1,4 @@
-# Alpha Bravo
+# Alpha Bravo Quiz
 
 A NATO phonetic alphabet quiz app built with React Native and Expo. Learn Alfa, Bravo, Charlie and all 26 code words through quizzes, flashcards, morse code practice, spelling drills, and daily challenges.
 
@@ -162,7 +162,7 @@ Sign up at [Google Play Console](https://play.google.com/console/) ($25 one-time
 ### 2. Create a new app
 
 In the Play Console, click **Create app** and fill in:
-- App name: **Alpha Bravo**
+- App name: **Alpha Bravo Quiz**
 - Default language: English
 - App or game: App
 - Free or paid: Free

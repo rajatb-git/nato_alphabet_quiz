@@ -40,7 +40,7 @@ export async function scheduleDailyReminder(): Promise<void> {
     await N.cancelAllScheduledNotificationsAsync();
     await N.scheduleNotificationAsync({
       content: {
-        title: 'Alpha Bravo Reminder',
+        title: 'Alpha Bravo Quiz Reminder',
         body: "Don't break your streak! Take a quick quiz today.",
       },
       trigger: {

@@ -1,15 +1,15 @@
-# Google Play Store Listing — Alpha Bravo
+# Google Play Store Listing — Alpha Bravo Quiz
 
 ## App Name
-Alpha Bravo
+Alpha Bravo Quiz
 
 ## Short Description (80 chars max)
 Learn the NATO phonetic alphabet with quizzes, flashcards, and daily challenges.
 
 ## Full Description (4000 chars max)
-Master the NATO phonetic alphabet with Alpha Bravo — the fast, focused way to learn Alfa, Bravo, Charlie and all 26 code words used by pilots, military, emergency services, and professionals worldwide.
+Master the NATO phonetic alphabet with Alpha Bravo Quiz — the fast, focused way to learn Alfa, Bravo, Charlie and all 26 code words used by pilots, military, emergency services, and professionals worldwide.
 
-Whether you're a student pilot studying for your radio exam, a military recruit, an emergency dispatcher, or just someone who wants to spell things clearly over the phone, Alpha Bravo helps you build instant recall through active practice.
+Whether you're a student pilot studying for your radio exam, a military recruit, an emergency dispatcher, or just someone who wants to spell things clearly over the phone, Alpha Bravo Quiz helps you build instant recall through active practice.
 
 HOW IT WORKS
 
@@ -46,7 +46,7 @@ FEATURES
 - No ads, no in-app purchases, no account required
 - All data stored locally on your device
 
-Alpha Bravo is free, private, and built for focused learning. Download it and start mastering the NATO phonetic alphabet today.
+Alpha Bravo Quiz is free, private, and built for focused learning. Download it and start mastering the NATO phonetic alphabet today.
 
 ## Category
 Education
