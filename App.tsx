@@ -5,7 +5,6 @@ import { NavigationContainer, DarkTheme } from '@react-navigation/native';
 import RootNavigator from './src/navigation/RootNavigator';
 import { useStatsStore } from './src/store/useStatsStore';
 import { useSettingsStore } from './src/store/useSettingsStore';
-import { loadSounds } from './src/utils/sounds';
 import { COLORS } from './src/constants/theme';
 
 const navTheme = {
@@ -28,7 +27,6 @@ export default function App() {
   useEffect(() => {
     loadStats();
     loadSettingsFn();
-    loadSounds();
   }, [loadStats, loadSettingsFn]);
 
   if (!statsLoaded || !settingsLoaded) {

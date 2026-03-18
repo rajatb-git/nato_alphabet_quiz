@@ -3,6 +3,7 @@ import { StyleSheet, View, Text, TouchableOpacity, Keyboard, KeyboardAvoidingVie
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
+import { useAudioPlayer } from 'expo-audio';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import GradientBackground from '../components/GradientBackground';
 import LetterCard from '../components/LetterCard';
@@ -13,7 +14,7 @@ import QuizSummary from '../components/QuizSummary';
 import { useQuizStore } from '../store/useQuizStore';
 import { useStatsStore } from '../store/useStatsStore';
 import { useSettingsStore } from '../store/useSettingsStore';
-import { playCorrect, playWrong } from '../utils/sounds';
+import { correctSource, wrongSource } from '../utils/sounds';
 import { NATO_ALPHABET } from '../constants/nato';
 import { COLORS, SPACING } from '../constants/theme';
 import type { HomeStackParamList } from '../navigation/RootNavigator';
@@ -39,6 +40,9 @@ export default function QuizScreen({ route, navigation }: Props) {
 
   const hapticEnabled = useSettingsStore((s) => s.settings.hapticEnabled);
   const soundEnabled = useSettingsStore((s) => s.settings.soundEnabled);
+
+  const correctPlayer = useAudioPlayer(correctSource);
+  const wrongPlayer = useAudioPlayer(wrongSource);
 
   const [answer, setAnswer] = useState('');
   const [feedback, setFeedback] = useState<{
@@ -76,11 +80,13 @@ export default function QuizScreen({ route, navigation }: Props) {
     }
 
     if (soundEnabled) {
-      result.isCorrect ? playCorrect() : playWrong();
+      const player = result.isCorrect ? correctPlayer : wrongPlayer;
+      player.seekTo(0);
+      player.play();
     }
 
     setFeedback(result);
-  }, [answer, feedback, submitAnswer, recordAnswer, currentQuestion, hapticEnabled, soundEnabled]);
+  }, [answer, feedback, submitAnswer, recordAnswer, currentQuestion, hapticEnabled, soundEnabled, correctPlayer, wrongPlayer]);
 
   const handleFeedbackDismiss = useCallback(() => {
     setFeedback(null);
