@@ -3,7 +3,7 @@ import { StyleSheet, View, Text, TouchableOpacity, Keyboard, KeyboardAvoidingVie
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
-import { useAudioPlayer } from 'expo-audio';
+import { useAudioPlayer, setAudioModeAsync } from 'expo-audio';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import GradientBackground from '../components/GradientBackground';
 import LetterCard from '../components/LetterCard';
@@ -50,6 +50,11 @@ export default function QuizScreen({ route, navigation }: Props) {
     correctAnswer: string;
   } | null>(null);
   const [completedSession, setCompletedSession] = useState<QuizSession | null>(null);
+
+  // Respect device silent mode
+  useEffect(() => {
+    setAudioModeAsync({ playsInSilentMode: false });
+  }, []);
 
   // Start quiz on mount
   useEffect(() => {
@@ -102,6 +107,14 @@ export default function QuizScreen({ route, navigation }: Props) {
   const handleDone = useCallback(() => {
     navigation.goBack();
   }, [navigation]);
+
+  if (completedSession) {
+    return (
+      <GradientBackground>
+        <QuizSummary session={completedSession} onDone={handleDone} />
+      </GradientBackground>
+    );
+  }
 
   if (!session || !currentQuestion) {
     return (
@@ -158,11 +171,6 @@ export default function QuizScreen({ route, navigation }: Props) {
             disabled={!!feedback}
           />
         </View>
-
-        {/* Summary overlay */}
-        {completedSession && (
-          <QuizSummary session={completedSession} onDone={handleDone} />
-        )}
       </View>
       </KeyboardAvoidingView>
     </GradientBackground>
