@@ -46,4 +46,4 @@ If this policy is updated, the revised version will be posted here with an updat
 
 If you have questions about this privacy policy, contact:
 
-(your developer email)
+hello@rajatbansal.dev

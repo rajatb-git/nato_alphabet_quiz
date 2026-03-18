@@ -61,7 +61,7 @@ PEGI 3 / Everyone (no objectionable content)
 General / Adults
 
 ## Contact Email
-(your developer email)
+hello@rajatbansal.dev
 
 ## Privacy Policy URL
 (host PRIVACY_POLICY.md at a public URL and link here)
