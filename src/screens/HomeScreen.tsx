@@ -1,0 +1,262 @@
+import React from 'react';
+import {
+  StyleSheet,
+  View,
+  Text,
+  TouchableOpacity,
+  ScrollView,
+} from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useNavigation } from '@react-navigation/native';
+import GradientBackground from '../components/GradientBackground';
+import StatCard from '../components/StatCard';
+import { useStatsStore } from '../store/useStatsStore';
+import { COLORS, SPACING, BORDER_RADIUS } from '../constants/theme';
+import { formatPercent } from '../utils/helpers';
+import type { HomeStackParamList } from '../navigation/RootNavigator';
+
+type Nav = NativeStackNavigationProp<HomeStackParamList, 'Home'>;
+
+export default function HomeScreen() {
+  const nav = useNavigation<Nav>();
+  const insets = useSafeAreaInsets();
+  const stats = useStatsStore((s) => s.stats);
+  const getTodayRecord = useStatsStore((s) => s.getTodayRecord);
+  const getWeakLetters = useStatsStore((s) => s.getWeakLetters);
+  const todayRecord = getTodayRecord();
+  const weakLetters = getWeakLetters();
+
+  const todayAccuracy = formatPercent(
+    todayRecord.totalCorrect,
+    todayRecord.totalAttempts,
+  );
+
+  return (
+    <GradientBackground>
+      <ScrollView
+        contentContainerStyle={[styles.content, { paddingTop: insets.top + SPACING.lg }]}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Header */}
+        <View style={styles.header}>
+          <View>
+            <Text style={styles.greeting}>NATO Phonetic</Text>
+            <Text style={styles.title}>Alphabet Quiz</Text>
+          </View>
+          {stats.currentStreak > 0 && (
+            <View style={styles.streakBadge}>
+              <Text style={styles.streakIcon}>🔥</Text>
+              <Text style={styles.streakNum}>{stats.currentStreak}</Text>
+            </View>
+          )}
+        </View>
+
+        {/* Today's Stats */}
+        <View style={styles.statsRow}>
+          <StatCard
+            label="Today"
+            value={todayRecord.totalAttempts}
+            icon="📝"
+          />
+          <StatCard
+            label="Accuracy"
+            value={todayRecord.totalAttempts > 0 ? `${todayAccuracy}%` : '—'}
+            icon="🎯"
+            color={todayAccuracy >= 80 ? COLORS.success : todayAccuracy >= 50 ? COLORS.warning : COLORS.textSecondary}
+          />
+          <StatCard
+            label="Sessions"
+            value={todayRecord.quizSessions}
+            icon="⚡"
+          />
+        </View>
+
+        {/* Quiz Buttons */}
+        <Text style={styles.sectionTitle}>Start a Quiz</Text>
+
+        <TouchableOpacity
+          style={styles.quizCard}
+          activeOpacity={0.8}
+          onPress={() => nav.navigate('Quiz', { mode: 'random' })}
+        >
+          <View style={styles.quizCardContent}>
+            <View style={[styles.quizIcon, { backgroundColor: 'rgba(124,58,237,0.2)' }]}>
+              <MaterialCommunityIcons name="shuffle-variant" size={32} color={COLORS.primary} />
+            </View>
+            <View style={styles.quizCardText}>
+              <Text style={styles.quizCardTitle}>Random Quiz</Text>
+              <Text style={styles.quizCardDesc}>
+                Test yourself on 10 random letters
+              </Text>
+            </View>
+            <MaterialCommunityIcons
+              name="chevron-right"
+              size={24}
+              color={COLORS.textMuted}
+            />
+          </View>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.quizCard, weakLetters.length === 0 && styles.quizCardDisabled]}
+          activeOpacity={weakLetters.length > 0 ? 0.8 : 1}
+          onPress={() => {
+            if (weakLetters.length > 0) {
+              nav.navigate('Quiz', { mode: 'weak' });
+            }
+          }}
+        >
+          <View style={styles.quizCardContent}>
+            <View style={[styles.quizIcon, { backgroundColor: 'rgba(239,68,68,0.2)' }]}>
+              <MaterialCommunityIcons name="target" size={32} color={COLORS.error} />
+            </View>
+            <View style={styles.quizCardText}>
+              <Text style={styles.quizCardTitle}>Weak Letters</Text>
+              <Text style={styles.quizCardDesc}>
+                {weakLetters.length > 0
+                  ? `Practice ${weakLetters.length} letters you struggle with`
+                  : 'Complete some quizzes first to unlock'}
+              </Text>
+            </View>
+            <MaterialCommunityIcons
+              name="chevron-right"
+              size={24}
+              color={COLORS.textMuted}
+            />
+          </View>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.quizCard}
+          activeOpacity={0.8}
+          onPress={() => nav.navigate('Quiz', { mode: 'random', fullAlphabet: true })}
+        >
+          <View style={styles.quizCardContent}>
+            <View style={[styles.quizIcon, { backgroundColor: 'rgba(16,185,129,0.2)' }]}>
+              <MaterialCommunityIcons name="alpha-a-box" size={32} color={COLORS.success} />
+            </View>
+            <View style={styles.quizCardText}>
+              <Text style={styles.quizCardTitle}>Full Alphabet</Text>
+              <Text style={styles.quizCardDesc}>
+                All 26 letters — the ultimate challenge
+              </Text>
+            </View>
+            <MaterialCommunityIcons
+              name="chevron-right"
+              size={24}
+              color={COLORS.textMuted}
+            />
+          </View>
+        </TouchableOpacity>
+
+        {/* Streak info */}
+        {stats.longestStreak > 0 && (
+          <View style={styles.streakInfo}>
+            <Text style={styles.streakInfoText}>
+              Longest streak: {stats.longestStreak} day
+              {stats.longestStreak !== 1 ? 's' : ''}
+            </Text>
+          </View>
+        )}
+
+        <View style={{ height: SPACING.xxl }} />
+      </ScrollView>
+    </GradientBackground>
+  );
+}
+
+const styles = StyleSheet.create({
+  content: {
+    paddingHorizontal: SPACING.lg,
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: SPACING.xl,
+  },
+  greeting: {
+    fontSize: 16,
+    color: COLORS.textSecondary,
+    fontWeight: '500',
+  },
+  title: {
+    fontSize: 30,
+    fontWeight: '800',
+    color: COLORS.text,
+  },
+  streakBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(245,158,11,0.15)',
+    borderRadius: BORDER_RADIUS.full,
+    paddingHorizontal: SPACING.md,
+    paddingVertical: SPACING.sm,
+    gap: SPACING.xs,
+  },
+  streakIcon: {
+    fontSize: 20,
+  },
+  streakNum: {
+    fontSize: 20,
+    fontWeight: '800',
+    color: COLORS.warning,
+  },
+  statsRow: {
+    flexDirection: 'row',
+    gap: SPACING.sm,
+    marginBottom: SPACING.xl,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: COLORS.text,
+    marginBottom: SPACING.md,
+  },
+  quizCard: {
+    backgroundColor: COLORS.backgroundCard,
+    borderRadius: BORDER_RADIUS.lg,
+    borderWidth: 1,
+    borderColor: COLORS.cardBorder,
+    padding: SPACING.md,
+    marginBottom: SPACING.sm,
+  },
+  quizCardDisabled: {
+    opacity: 0.4,
+  },
+  quizCardContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SPACING.md,
+  },
+  quizIcon: {
+    width: 56,
+    height: 56,
+    borderRadius: BORDER_RADIUS.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  quizCardText: {
+    flex: 1,
+  },
+  quizCardTitle: {
+    fontSize: 17,
+    fontWeight: '700',
+    color: COLORS.text,
+    marginBottom: 2,
+  },
+  quizCardDesc: {
+    fontSize: 13,
+    color: COLORS.textSecondary,
+  },
+  streakInfo: {
+    alignItems: 'center',
+    marginTop: SPACING.lg,
+  },
+  streakInfoText: {
+    fontSize: 14,
+    color: COLORS.textMuted,
+  },
+});
