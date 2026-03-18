@@ -73,8 +73,45 @@ export default function HomeScreen() {
           />
         </View>
 
+        {/* Study */}
+        <Text style={styles.sectionTitle}>Study</Text>
+
+        <TouchableOpacity
+          style={styles.quizCard}
+          activeOpacity={0.8}
+          onPress={() => nav.navigate('NatoFlashcards')}
+        >
+          <View style={styles.quizCardContent}>
+            <View style={[styles.quizIcon, { backgroundColor: 'rgba(59,130,246,0.2)' }]}>
+              <MaterialCommunityIcons name="book-open-variant" size={32} color="#3b82f6" />
+            </View>
+            <View style={styles.quizCardText}>
+              <Text style={styles.quizCardTitle}>NATO Flashcards</Text>
+              <Text style={styles.quizCardDesc}>Review letters and their NATO words</Text>
+            </View>
+            <MaterialCommunityIcons name="chevron-right" size={24} color={COLORS.textMuted} />
+          </View>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.quizCard}
+          activeOpacity={0.8}
+          onPress={() => nav.navigate('MorseFlashcards')}
+        >
+          <View style={styles.quizCardContent}>
+            <View style={[styles.quizIcon, { backgroundColor: 'rgba(236,72,153,0.2)' }]}>
+              <MaterialCommunityIcons name="radio-tower" size={32} color="#ec4899" />
+            </View>
+            <View style={styles.quizCardText}>
+              <Text style={styles.quizCardTitle}>Morse Flashcards</Text>
+              <Text style={styles.quizCardDesc}>Learn morse code patterns for each letter</Text>
+            </View>
+            <MaterialCommunityIcons name="chevron-right" size={24} color={COLORS.textMuted} />
+          </View>
+        </TouchableOpacity>
+
         {/* Quiz Buttons */}
-        <Text style={styles.sectionTitle}>Start a Quiz</Text>
+        <Text style={[styles.sectionTitle, { marginTop: SPACING.sm }]}>Start a Quiz</Text>
 
         <TouchableOpacity
           style={styles.quizCard}

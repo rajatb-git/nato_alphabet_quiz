@@ -7,24 +7,24 @@ import { useAudioPlayer, setAudioModeAsync } from 'expo-audio';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import GradientBackground from '../components/GradientBackground';
 import LetterCard from '../components/LetterCard';
-import AnswerInput from '../components/AnswerInput';
-import ResultFeedback from '../components/ResultFeedback';
+import AnswerInput, { type AnswerInputHandle } from '../components/AnswerInput';
+import CorrectionBanner from '../components/CorrectionBanner';
 import ProgressBar from '../components/ProgressBar';
 import QuizSummary from '../components/QuizSummary';
 import { useStatsStore } from '../store/useStatsStore';
 import { useSettingsStore } from '../store/useSettingsStore';
 import { useAchievementsStore } from '../store/useAchievementsStore';
+import { useQuizFeedback } from '../hooks/useQuizFeedback';
 import { correctSource, wrongSource } from '../utils/sounds';
 import { NATO_MAP, NATO_ALPHABET, isCorrectAnswer } from '../constants/nato';
 import { COLORS, SPACING } from '../constants/theme';
 import { getTodayDate } from '../utils/helpers';
 import { loadDailyChallenge, saveDailyChallenge } from '../utils/storage';
 import type { HomeStackParamList } from '../navigation/RootNavigator';
-import type { QuizSession, QuizQuestion, DailyChallenge } from '../types';
+import type { QuizSession, QuizQuestion } from '../types';
 
 type Props = NativeStackScreenProps<HomeStackParamList, 'DailyChallenge'>;
 
-// Deterministic seeded random
 function seededRandom(seed: number) {
   let s = seed;
   return () => {
@@ -34,12 +34,10 @@ function seededRandom(seed: number) {
 }
 
 function getDailyLetters(dateStr: string): string[] {
-  // Create seed from date string
   const parts = dateStr.split('-');
   const seed = parseInt(parts.join(''), 10);
   const rng = seededRandom(seed);
   const all = NATO_ALPHABET.map((e) => e.letter);
-  // Fisher-Yates with seeded rng
   for (let i = all.length - 1; i > 0; i--) {
     const j = Math.floor(rng() * (i + 1));
     [all[i], all[j]] = [all[j], all[i]];
@@ -49,6 +47,7 @@ function getDailyLetters(dateStr: string): string[] {
 
 export default function DailyChallengeScreen({ navigation }: Props) {
   const insets = useSafeAreaInsets();
+  const inputRef = useRef<AnswerInputHandle>(null);
   const recordAnswer = useStatsStore((s) => s.recordAnswer);
   const recordSessionComplete = useStatsStore((s) => s.recordSessionComplete);
   const hapticEnabled = useSettingsStore((s) => s.settings.hapticEnabled);
@@ -57,15 +56,15 @@ export default function DailyChallengeScreen({ navigation }: Props) {
 
   const correctPlayer = useAudioPlayer(correctSource);
   const wrongPlayer = useAudioPlayer(wrongSource);
+  const { flashColor, correction, showFeedback, dismissCorrection } = useQuizFeedback();
 
   const [questions, setQuestions] = useState<QuizQuestion[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answer, setAnswer] = useState('');
-  const [feedback, setFeedback] = useState<{ isCorrect: boolean; correctAnswer: string } | null>(null);
   const [completedSession, setCompletedSession] = useState<QuizSession | null>(null);
   const [alreadyCompleted, setAlreadyCompleted] = useState(false);
   const [previousScore, setPreviousScore] = useState<{ score: number; total: number } | null>(null);
-  const startedAt = useRef(new Date().toISOString());
+  const startedAt = useRef(Date.now());
 
   useEffect(() => {
     setAudioModeAsync({ playsInSilentMode: false });
@@ -94,8 +93,7 @@ export default function DailyChallengeScreen({ navigation }: Props) {
   const correctCount = questions.filter((q) => q.isCorrect === true).length;
 
   const handleSubmit = useCallback(() => {
-    if (!answer.trim() || feedback || !currentQuestion) return;
-    Keyboard.dismiss();
+    if (!answer.trim() || !currentQuestion) return;
 
     const isCorrect = isCorrectAnswer(currentQuestion.letter, answer);
     recordAnswer(currentQuestion.letter, isCorrect);
@@ -120,26 +118,20 @@ export default function DailyChallengeScreen({ navigation }: Props) {
       player.play();
     }
 
-    setFeedback({ isCorrect, correctAnswer: currentQuestion.correctAnswer });
-  }, [answer, feedback, currentQuestion, currentIndex, questions, recordAnswer, hapticEnabled, soundEnabled, correctPlayer, wrongPlayer]);
-
-  const handleFeedbackDismiss = useCallback(() => {
-    setFeedback(null);
+    showFeedback(isCorrect, currentQuestion.correctAnswer);
     setAnswer('');
 
     const nextIdx = currentIndex + 1;
     if (nextIdx < questions.length) {
       setCurrentIndex(nextIdx);
+      setTimeout(() => inputRef.current?.focus(), 50);
     } else {
+      Keyboard.dismiss();
       recordSessionComplete('daily');
-      const finalQuestions = questions.map((q, i) =>
-        i === currentIndex ? { ...q, ...questions[currentIndex] } : q,
-      );
-      const score = finalQuestions.filter((q) => q.isCorrect === true).length;
-      const elapsed = (Date.now() - new Date(startedAt.current).getTime()) / 1000;
+      const score = updated.filter((q) => q.isCorrect === true).length;
+      const elapsed = (Date.now() - startedAt.current) / 1000;
       checkAchievements({ mode: 'daily', score, total: questions.length, quizTime: elapsed });
 
-      // Save daily challenge
       const today = getTodayDate();
       saveDailyChallenge({
         date: today,
@@ -152,34 +144,27 @@ export default function DailyChallengeScreen({ navigation }: Props) {
 
       setCompletedSession({
         mode: 'random',
-        questions: finalQuestions,
-        currentIndex: finalQuestions.length,
-        startedAt: startedAt.current,
+        questions: updated,
+        currentIndex: updated.length,
+        startedAt: new Date(startedAt.current).toISOString(),
         completedAt: new Date().toISOString(),
       });
     }
-  }, [currentIndex, questions, recordSessionComplete, checkAchievements]);
+  }, [answer, currentQuestion, currentIndex, questions, recordAnswer, hapticEnabled, soundEnabled, correctPlayer, wrongPlayer, showFeedback, recordSessionComplete, checkAchievements]);
 
   const handleDone = useCallback(() => navigation.goBack(), [navigation]);
 
   if (completedSession) {
-    return (
-      <GradientBackground>
-        <QuizSummary session={completedSession} onDone={handleDone} />
-      </GradientBackground>
-    );
+    return <GradientBackground><QuizSummary session={completedSession} onDone={handleDone} /></GradientBackground>;
   }
 
-  // Already completed today
   if (alreadyCompleted && previousScore) {
     return (
       <GradientBackground>
         <View style={[styles.completedContainer, { paddingTop: insets.top + SPACING.xl }]}>
           <MaterialCommunityIcons name="check-circle" size={80} color={COLORS.success} />
           <Text style={styles.completedTitle}>Already Completed!</Text>
-          <Text style={styles.completedScore}>
-            Today's score: {previousScore.score}/{previousScore.total}
-          </Text>
+          <Text style={styles.completedScore}>Today's score: {previousScore.score}/{previousScore.total}</Text>
           <Text style={styles.completedHint}>Come back tomorrow for a new challenge</Text>
           <TouchableOpacity style={styles.doneBtn} onPress={handleDone} activeOpacity={0.8}>
             <Text style={styles.doneBtnText}>Go Back</Text>
@@ -190,13 +175,7 @@ export default function DailyChallengeScreen({ navigation }: Props) {
   }
 
   if (!currentQuestion) {
-    return (
-      <GradientBackground>
-        <View style={[styles.loading, { paddingTop: insets.top }]}>
-          <Text style={styles.loadingText}>Loading...</Text>
-        </View>
-      </GradientBackground>
-    );
+    return <GradientBackground><View style={[styles.loading, { paddingTop: insets.top }]}><Text style={styles.loadingText}>Loading...</Text></View></GradientBackground>;
   }
 
   return (
@@ -211,21 +190,15 @@ export default function DailyChallengeScreen({ navigation }: Props) {
             <View style={{ width: 40 }} />
           </View>
 
-          <ProgressBar current={currentIndex + (feedback ? 1 : 0)} total={questions.length} correct={correctCount} />
+          <ProgressBar current={currentIndex} total={questions.length} correct={correctCount} />
 
           <View style={styles.cardArea}>
-            <LetterCard letter={currentQuestion.letter} />
-            {feedback && (
-              <ResultFeedback
-                isCorrect={feedback.isCorrect}
-                correctAnswer={feedback.correctAnswer}
-                onDismiss={handleFeedbackDismiss}
-              />
-            )}
+            {correction && <CorrectionBanner correctAnswer={correction} onDismiss={dismissCorrection} />}
+            <LetterCard letter={currentQuestion.letter} flashColor={flashColor} />
           </View>
 
           <View style={styles.inputArea}>
-            <AnswerInput value={answer} onChangeText={setAnswer} onSubmit={handleSubmit} disabled={!!feedback} />
+            <AnswerInput ref={inputRef} value={answer} onChangeText={setAnswer} onSubmit={handleSubmit} flashColor={flashColor} />
           </View>
         </View>
       </KeyboardAvoidingView>
@@ -246,17 +219,10 @@ const styles = StyleSheet.create({
   headerTitle: { fontSize: 17, fontWeight: '700', color: COLORS.text },
   cardArea: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   inputArea: { paddingBottom: SPACING.xxl },
-  completedContainer: {
-    flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: SPACING.xl,
-  },
-  completedTitle: {
-    fontSize: 28, fontWeight: '800', color: COLORS.text, marginTop: SPACING.lg, marginBottom: SPACING.sm,
-  },
+  completedContainer: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: SPACING.xl },
+  completedTitle: { fontSize: 28, fontWeight: '800', color: COLORS.text, marginTop: SPACING.lg, marginBottom: SPACING.sm },
   completedScore: { fontSize: 20, fontWeight: '600', color: COLORS.primaryLight, marginBottom: SPACING.sm },
   completedHint: { fontSize: 15, color: COLORS.textSecondary, marginBottom: SPACING.xl },
-  doneBtn: {
-    backgroundColor: COLORS.primary, borderRadius: 999,
-    paddingHorizontal: SPACING.xxl, paddingVertical: SPACING.md,
-  },
+  doneBtn: { backgroundColor: COLORS.primary, borderRadius: 999, paddingHorizontal: SPACING.xxl, paddingVertical: SPACING.md },
   doneBtnText: { fontSize: 18, fontWeight: '700', color: COLORS.text },
 });

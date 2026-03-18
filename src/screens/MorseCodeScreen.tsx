@@ -1,17 +1,19 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
-import { StyleSheet, View, Text, TouchableOpacity, Keyboard, KeyboardAvoidingView } from 'react-native';
+import { StyleSheet, View, Text, TouchableOpacity, KeyboardAvoidingView } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { useAudioPlayer, setAudioModeAsync } from 'expo-audio';
-import Animated, { useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated';
+import Animated, { useSharedValue, useAnimatedStyle, withSpring, withTiming, interpolateColor } from 'react-native-reanimated';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import GradientBackground from '../components/GradientBackground';
+import CorrectionBanner from '../components/CorrectionBanner';
 import ProgressBar from '../components/ProgressBar';
 import QuizSummary from '../components/QuizSummary';
 import { useStatsStore } from '../store/useStatsStore';
 import { useSettingsStore } from '../store/useSettingsStore';
 import { useAchievementsStore } from '../store/useAchievementsStore';
+import { useQuizFeedback } from '../hooks/useQuizFeedback';
 import { correctSource, wrongSource } from '../utils/sounds';
 import { NATO_ALPHABET, MORSE_MAP } from '../constants/nato';
 import { COLORS, SPACING, BORDER_RADIUS } from '../constants/theme';
@@ -21,9 +23,10 @@ import type { QuizSession, QuizQuestion } from '../types';
 
 type Props = NativeStackScreenProps<HomeStackParamList, 'MorseCode'>;
 
-function MorseDisplay({ morse }: { morse: string }) {
+function MorseDisplay({ morse, flashColor }: { morse: string; flashColor?: 'success' | 'error' | null }) {
   const scale = useSharedValue(0.5);
   const opacity = useSharedValue(0);
+  const flash = useSharedValue(0);
 
   useEffect(() => {
     scale.value = 0.5;
@@ -32,13 +35,29 @@ function MorseDisplay({ morse }: { morse: string }) {
     opacity.value = withSpring(1);
   }, [morse, scale, opacity]);
 
+  useEffect(() => {
+    if (flashColor) {
+      flash.value = 1;
+      flash.value = withTiming(0, { duration: 400 });
+    }
+  }, [flashColor, flash]);
+
   const animStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
     opacity: opacity.value,
   }));
 
+  const borderStyle = useAnimatedStyle(() => {
+    const color = flashColor === 'success'
+      ? interpolateColor(flash.value, [0, 1], [COLORS.cardBorder, COLORS.success])
+      : flashColor === 'error'
+        ? interpolateColor(flash.value, [0, 1], [COLORS.cardBorder, COLORS.error])
+        : COLORS.cardBorder;
+    return { borderColor: color };
+  });
+
   return (
-    <Animated.View style={[styles.morseCard, animStyle]}>
+    <Animated.View style={[styles.morseCard, animStyle, borderStyle]}>
       <View style={styles.morseSymbols}>
         {morse.split('').map((ch, i) => (
           <View key={i} style={ch === '.' ? styles.dot : ch === '-' ? styles.dash : styles.morseSpace} />
@@ -59,24 +78,20 @@ export default function MorseCodeScreen({ navigation }: Props) {
 
   const correctPlayer = useAudioPlayer(correctSource);
   const wrongPlayer = useAudioPlayer(wrongSource);
+  const { flashColor, correction, showFeedback, dismissCorrection } = useQuizFeedback();
 
   const [questions, setQuestions] = useState<QuizQuestion[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answer, setAnswer] = useState('');
-  const [feedback, setFeedback] = useState<{ isCorrect: boolean; correctAnswer: string } | null>(null);
   const [completedSession, setCompletedSession] = useState<QuizSession | null>(null);
-  const startedAt = useRef(new Date().toISOString());
+  const startedAt = useRef(Date.now());
 
   useEffect(() => {
     setAudioModeAsync({ playsInSilentMode: false });
     const letters = shuffleArray(NATO_ALPHABET.map((e) => e.letter)).slice(0, 10);
     setQuestions(
       letters.map((letter) => ({
-        letter,
-        correctAnswer: letter,
-        userAnswer: null,
-        isCorrect: null,
-        answeredAt: null,
+        letter, correctAnswer: letter, userAnswer: null, isCorrect: null, answeredAt: null,
       })),
     );
   }, []);
@@ -86,18 +101,14 @@ export default function MorseCodeScreen({ navigation }: Props) {
   const currentMorse = currentQuestion ? MORSE_MAP[currentQuestion.letter] : '';
 
   const handleSubmit = useCallback(() => {
-    if (!answer.trim() || feedback || !currentQuestion) return;
-    Keyboard.dismiss();
+    if (!answer.trim() || !currentQuestion) return;
 
     const isCorrect = answer.trim().toUpperCase() === currentQuestion.letter;
     recordAnswer(currentQuestion.letter, isCorrect);
 
     const updated = [...questions];
     updated[currentIndex] = {
-      ...currentQuestion,
-      userAnswer: answer.trim(),
-      isCorrect,
-      answeredAt: new Date().toISOString(),
+      ...currentQuestion, userAnswer: answer.trim(), isCorrect, answeredAt: new Date().toISOString(),
     };
     setQuestions(updated);
 
@@ -112,11 +123,7 @@ export default function MorseCodeScreen({ navigation }: Props) {
       player.play();
     }
 
-    setFeedback({ isCorrect, correctAnswer: currentQuestion.letter });
-  }, [answer, feedback, currentQuestion, currentIndex, questions, recordAnswer, hapticEnabled, soundEnabled, correctPlayer, wrongPlayer]);
-
-  const handleFeedbackDismiss = useCallback(() => {
-    setFeedback(null);
+    showFeedback(isCorrect, currentQuestion.letter);
     setAnswer('');
 
     const nextIdx = currentIndex + 1;
@@ -124,37 +131,24 @@ export default function MorseCodeScreen({ navigation }: Props) {
       setCurrentIndex(nextIdx);
     } else {
       recordSessionComplete('morse');
-      const score = questions.filter((q) => q.isCorrect === true).length;
-      const elapsed = (Date.now() - new Date(startedAt.current).getTime()) / 1000;
+      const score = updated.filter((q) => q.isCorrect === true).length;
+      const elapsed = (Date.now() - startedAt.current) / 1000;
       checkAchievements({ mode: 'morse', score, total: questions.length, quizTime: elapsed });
       setCompletedSession({
-        mode: 'random',
-        questions,
-        currentIndex: questions.length,
-        startedAt: startedAt.current,
-        completedAt: new Date().toISOString(),
+        mode: 'random', questions: updated, currentIndex: updated.length,
+        startedAt: new Date(startedAt.current).toISOString(), completedAt: new Date().toISOString(),
       });
     }
-  }, [currentIndex, questions, recordSessionComplete, checkAchievements]);
+  }, [answer, currentQuestion, currentIndex, questions, recordAnswer, hapticEnabled, soundEnabled, correctPlayer, wrongPlayer, showFeedback, recordSessionComplete, checkAchievements]);
 
   const handleDone = useCallback(() => navigation.goBack(), [navigation]);
 
   if (completedSession) {
-    return (
-      <GradientBackground>
-        <QuizSummary session={completedSession} onDone={handleDone} />
-      </GradientBackground>
-    );
+    return <GradientBackground><QuizSummary session={completedSession} onDone={handleDone} /></GradientBackground>;
   }
 
   if (!currentQuestion) {
-    return (
-      <GradientBackground>
-        <View style={[styles.loading, { paddingTop: insets.top }]}>
-          <Text style={styles.loadingText}>Loading...</Text>
-        </View>
-      </GradientBackground>
-    );
+    return <GradientBackground><View style={[styles.loading, { paddingTop: insets.top }]}><Text style={styles.loadingText}>Loading...</Text></View></GradientBackground>;
   }
 
   return (
@@ -169,62 +163,40 @@ export default function MorseCodeScreen({ navigation }: Props) {
             <View style={{ width: 40 }} />
           </View>
 
-          <ProgressBar current={currentIndex + (feedback ? 1 : 0)} total={questions.length} correct={correctCount} />
+          <ProgressBar current={currentIndex} total={questions.length} correct={correctCount} />
 
           <View style={styles.cardArea}>
+            {correction && <CorrectionBanner correctAnswer={correction} onDismiss={dismissCorrection} />}
             <Text style={styles.promptText}>What letter is this?</Text>
-            <MorseDisplay morse={currentMorse} />
-
-            {feedback && (
-              <View style={styles.feedbackOverlay}>
-                <View style={[styles.feedbackBadge, { backgroundColor: feedback.isCorrect ? COLORS.success : COLORS.error }]}>
-                  <MaterialCommunityIcons
-                    name={feedback.isCorrect ? 'check' : 'close'}
-                    size={32}
-                    color={COLORS.text}
-                  />
-                  <Text style={styles.feedbackText}>
-                    {feedback.isCorrect ? 'Correct!' : `It was ${feedback.correctAnswer}`}
-                  </Text>
-                </View>
-              </View>
-            )}
+            <MorseDisplay morse={currentMorse} flashColor={flashColor} />
           </View>
 
-          {/* Letter input - single character */}
           <View style={styles.inputArea}>
             <View style={styles.inputRow}>
-              <View style={styles.letterInput}>
-                <TouchableOpacity
-                  style={styles.letterInputField}
-                  activeOpacity={1}
-                >
-                  <Text style={styles.letterInputText}>
-                    {answer.toUpperCase() || '?'}
-                  </Text>
-                </TouchableOpacity>
+              <View style={[
+                styles.letterInputField,
+                flashColor === 'success' && { borderColor: COLORS.success },
+                flashColor === 'error' && { borderColor: COLORS.error },
+              ]}>
+                <Text style={styles.letterInputText}>{answer.toUpperCase() || '?'}</Text>
               </View>
             </View>
-            {/* Letter grid for quick selection */}
             <View style={styles.letterGrid}>
               {'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').map((ch) => (
                 <TouchableOpacity
                   key={ch}
                   style={[styles.gridBtn, answer.toUpperCase() === ch && styles.gridBtnActive]}
-                  onPress={() => { if (!feedback) setAnswer(ch); }}
+                  onPress={() => setAnswer(ch)}
                   activeOpacity={0.7}
-                  disabled={!!feedback}
                 >
-                  <Text style={[styles.gridBtnText, answer.toUpperCase() === ch && styles.gridBtnTextActive]}>
-                    {ch}
-                  </Text>
+                  <Text style={[styles.gridBtnText, answer.toUpperCase() === ch && styles.gridBtnTextActive]}>{ch}</Text>
                 </TouchableOpacity>
               ))}
             </View>
             <TouchableOpacity
-              style={[styles.submitBtn, (!answer.trim() || !!feedback) && styles.submitBtnDisabled]}
+              style={[styles.submitBtn, !answer.trim() && styles.submitBtnDisabled]}
               onPress={handleSubmit}
-              disabled={!answer.trim() || !!feedback}
+              disabled={!answer.trim()}
               activeOpacity={0.8}
             >
               <Text style={styles.submitBtnText}>Submit</Text>
@@ -250,67 +222,21 @@ const styles = StyleSheet.create({
   cardArea: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   promptText: { fontSize: 16, color: COLORS.textSecondary, marginBottom: SPACING.md },
   morseCard: {
-    backgroundColor: COLORS.backgroundCard,
-    borderRadius: BORDER_RADIUS.xl,
-    borderWidth: 1,
-    borderColor: COLORS.cardBorder,
-    padding: SPACING.xl,
-    alignItems: 'center',
-    minWidth: 200,
-    shadowColor: COLORS.primary,
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.3,
-    shadowRadius: 16,
-    elevation: 12,
+    backgroundColor: COLORS.backgroundCard, borderRadius: BORDER_RADIUS.xl,
+    borderWidth: 2, borderColor: COLORS.cardBorder, padding: SPACING.xl,
+    alignItems: 'center', minWidth: 200,
+    shadowColor: COLORS.primary, shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.3, shadowRadius: 16, elevation: 12,
   },
-  morseSymbols: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: SPACING.sm,
-    marginBottom: SPACING.md,
-  },
-  dot: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    backgroundColor: COLORS.primary,
-  },
-  dash: {
-    width: 48,
-    height: 20,
-    borderRadius: 10,
-    backgroundColor: COLORS.primary,
-  },
-  morseSpace: {
-    width: SPACING.md,
-  },
-  morseText: {
-    fontSize: 32,
-    fontWeight: '700',
-    color: COLORS.textSecondary,
-    letterSpacing: 8,
-  },
-  feedbackOverlay: {
-    position: 'absolute',
-    top: 0, left: 0, right: 0, bottom: 0,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  feedbackBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: SPACING.sm,
-    paddingHorizontal: SPACING.lg,
-    paddingVertical: SPACING.md,
-    borderRadius: BORDER_RADIUS.full,
-  },
-  feedbackText: { fontSize: 20, fontWeight: '700', color: COLORS.text },
+  morseSymbols: { flexDirection: 'row', alignItems: 'center', gap: SPACING.sm, marginBottom: SPACING.md },
+  dot: { width: 20, height: 20, borderRadius: 10, backgroundColor: COLORS.primary },
+  dash: { width: 48, height: 20, borderRadius: 10, backgroundColor: COLORS.primary },
+  morseSpace: { width: SPACING.md },
+  morseText: { fontSize: 32, fontWeight: '700', color: COLORS.textSecondary, letterSpacing: 8 },
   inputArea: { paddingHorizontal: SPACING.md, paddingBottom: SPACING.lg },
   inputRow: { alignItems: 'center', marginBottom: SPACING.sm },
-  letterInput: { alignItems: 'center' },
   letterInputField: {
     width: 56, height: 56, borderRadius: BORDER_RADIUS.md,
-    backgroundColor: COLORS.inputBackground, borderWidth: 1, borderColor: COLORS.cardBorder,
+    backgroundColor: COLORS.inputBackground, borderWidth: 2, borderColor: COLORS.cardBorder,
     alignItems: 'center', justifyContent: 'center',
   },
   letterInputText: { fontSize: 28, fontWeight: '800', color: COLORS.text },

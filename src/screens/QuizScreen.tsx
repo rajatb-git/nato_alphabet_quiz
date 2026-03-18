@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { StyleSheet, View, Text, TouchableOpacity, Keyboard, KeyboardAvoidingView } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -7,14 +7,15 @@ import { useAudioPlayer, setAudioModeAsync } from 'expo-audio';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import GradientBackground from '../components/GradientBackground';
 import LetterCard from '../components/LetterCard';
-import AnswerInput from '../components/AnswerInput';
-import ResultFeedback from '../components/ResultFeedback';
+import AnswerInput, { type AnswerInputHandle } from '../components/AnswerInput';
+import CorrectionBanner from '../components/CorrectionBanner';
 import ProgressBar from '../components/ProgressBar';
 import QuizSummary from '../components/QuizSummary';
 import { useQuizStore } from '../store/useQuizStore';
 import { useStatsStore } from '../store/useStatsStore';
 import { useSettingsStore } from '../store/useSettingsStore';
 import { useAchievementsStore } from '../store/useAchievementsStore';
+import { useQuizFeedback } from '../hooks/useQuizFeedback';
 import { correctSource, wrongSource } from '../utils/sounds';
 import { NATO_ALPHABET } from '../constants/nato';
 import { COLORS, SPACING } from '../constants/theme';
@@ -26,6 +27,7 @@ type Props = NativeStackScreenProps<HomeStackParamList, 'Quiz'>;
 export default function QuizScreen({ route, navigation }: Props) {
   const { mode, fullAlphabet } = route.params;
   const insets = useSafeAreaInsets();
+  const inputRef = useRef<AnswerInputHandle>(null);
 
   const startQuiz = useQuizStore((s) => s.startQuiz);
   const submitAnswer = useQuizStore((s) => s.submitAnswer);
@@ -46,19 +48,16 @@ export default function QuizScreen({ route, navigation }: Props) {
   const correctPlayer = useAudioPlayer(correctSource);
   const wrongPlayer = useAudioPlayer(wrongSource);
 
-  const [answer, setAnswer] = useState('');
-  const [feedback, setFeedback] = useState<{
-    isCorrect: boolean;
-    correctAnswer: string;
-  } | null>(null);
-  const [completedSession, setCompletedSession] = useState<QuizSession | null>(null);
+  const { flashColor, correction, showFeedback, dismissCorrection } = useQuizFeedback();
 
-  // Respect device silent mode
+  const [answer, setAnswer] = useState('');
+  const [completedSession, setCompletedSession] = useState<QuizSession | null>(null);
+  const startedAt = useRef(Date.now());
+
   useEffect(() => {
     setAudioModeAsync({ playsInSilentMode: false });
   }, []);
 
-  // Start quiz on mount
   useEffect(() => {
     const allLetters = NATO_ALPHABET.map((e) => e.letter);
     if (mode === 'weak') {
@@ -69,51 +68,47 @@ export default function QuizScreen({ route, navigation }: Props) {
     } else {
       startQuiz('random', allLetters, 10);
     }
+    startedAt.current = Date.now();
   }, [mode, fullAlphabet, startQuiz, getWeakLetters]);
 
   const handleSubmit = useCallback(() => {
-    if (!answer.trim() || feedback) return;
-    Keyboard.dismiss();
+    if (!answer.trim() || !currentQuestion) return;
 
     const result = submitAnswer(answer);
-    recordAnswer(currentQuestion!.letter, result.isCorrect);
+    recordAnswer(currentQuestion.letter, result.isCorrect);
 
     if (hapticEnabled) {
       Haptics.notificationAsync(
-        result.isCorrect
-          ? Haptics.NotificationFeedbackType.Success
-          : Haptics.NotificationFeedbackType.Error,
+        result.isCorrect ? Haptics.NotificationFeedbackType.Success : Haptics.NotificationFeedbackType.Error,
       );
     }
-
     if (soundEnabled) {
       const player = result.isCorrect ? correctPlayer : wrongPlayer;
       player.seekTo(0);
       player.play();
     }
 
-    setFeedback(result);
-  }, [answer, feedback, submitAnswer, recordAnswer, currentQuestion, hapticEnabled, soundEnabled, correctPlayer, wrongPlayer]);
-
-  const handleFeedbackDismiss = useCallback(() => {
-    setFeedback(null);
+    showFeedback(result.isCorrect, result.correctAnswer);
     setAnswer('');
+
+    // Advance immediately
     const hasNext = nextQuestion();
     if (!hasNext) {
+      Keyboard.dismiss();
       recordSessionComplete();
       const completed = endQuiz();
       if (completed) {
         const score = completed.questions.filter((q) => q.isCorrect).length;
-        const elapsed = (Date.now() - new Date(completed.startedAt).getTime()) / 1000;
+        const elapsed = (Date.now() - startedAt.current) / 1000;
         checkAchievements({ score, total: completed.questions.length, quizTime: elapsed });
       }
       setCompletedSession(completed);
+    } else {
+      setTimeout(() => inputRef.current?.focus(), 50);
     }
-  }, [nextQuestion, endQuiz, recordSessionComplete, checkAchievements]);
+  }, [answer, currentQuestion, submitAnswer, recordAnswer, hapticEnabled, soundEnabled, correctPlayer, wrongPlayer, showFeedback, nextQuestion, endQuiz, recordSessionComplete, checkAchievements]);
 
-  const handleDone = useCallback(() => {
-    navigation.goBack();
-  }, [navigation]);
+  const handleDone = useCallback(() => navigation.goBack(), [navigation]);
 
   if (completedSession) {
     return (
@@ -138,92 +133,50 @@ export default function QuizScreen({ route, navigation }: Props) {
   return (
     <GradientBackground>
       <KeyboardAvoidingView style={styles.flex} behavior="padding">
-      <View style={[styles.container, { paddingTop: insets.top + SPACING.sm }]}>
-        {/* Header */}
-        <View style={styles.header}>
-          <TouchableOpacity onPress={handleDone} style={styles.backButton}>
-            <MaterialCommunityIcons name="close" size={24} color={COLORS.text} />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>
-            {mode === 'weak' ? 'Weak Letters' : fullAlphabet ? 'Full Alphabet' : 'Random Quiz'}
-          </Text>
-          <View style={{ width: 40 }} />
-        </View>
+        <View style={[styles.container, { paddingTop: insets.top + SPACING.sm }]}>
+          <View style={styles.header}>
+            <TouchableOpacity onPress={handleDone} style={styles.backButton}>
+              <MaterialCommunityIcons name="close" size={24} color={COLORS.text} />
+            </TouchableOpacity>
+            <Text style={styles.headerTitle}>
+              {mode === 'weak' ? 'Weak Letters' : fullAlphabet ? 'Full Alphabet' : 'Random Quiz'}
+            </Text>
+            <View style={{ width: 40 }} />
+          </View>
 
-        <ProgressBar
-          current={session.currentIndex + (feedback ? 1 : 0)}
-          total={session.questions.length}
-          correct={correctCount}
-        />
+          <ProgressBar current={session.currentIndex} total={session.questions.length} correct={correctCount} />
 
-        {/* Letter */}
-        <View style={styles.cardArea}>
-          <LetterCard letter={currentQuestion.letter} />
+          <View style={styles.cardArea}>
+            {correction && <CorrectionBanner correctAnswer={correction} onDismiss={dismissCorrection} />}
+            <LetterCard letter={currentQuestion.letter} flashColor={flashColor} />
+          </View>
 
-          {feedback && (
-            <ResultFeedback
-              isCorrect={feedback.isCorrect}
-              correctAnswer={feedback.correctAnswer}
-              onDismiss={handleFeedbackDismiss}
+          <View style={styles.inputArea}>
+            <AnswerInput
+              ref={inputRef}
+              value={answer}
+              onChangeText={setAnswer}
+              onSubmit={handleSubmit}
+              flashColor={flashColor}
             />
-          )}
+          </View>
         </View>
-
-        {/* Input */}
-        <View style={styles.inputArea}>
-          <AnswerInput
-            value={answer}
-            onChangeText={setAnswer}
-            onSubmit={handleSubmit}
-            disabled={!!feedback}
-          />
-        </View>
-      </View>
       </KeyboardAvoidingView>
     </GradientBackground>
   );
 }
 
 const styles = StyleSheet.create({
-  flex: {
-    flex: 1,
-  },
-  container: {
-    flex: 1,
-  },
-  loading: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  loadingText: {
-    color: COLORS.textSecondary,
-    fontSize: 16,
-  },
+  flex: { flex: 1 },
+  container: { flex: 1 },
+  loading: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  loadingText: { color: COLORS.textSecondary, fontSize: 16 },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: SPACING.md,
-    paddingBottom: SPACING.sm,
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    paddingHorizontal: SPACING.md, paddingBottom: SPACING.sm,
   },
-  backButton: {
-    width: 40,
-    height: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  headerTitle: {
-    fontSize: 17,
-    fontWeight: '700',
-    color: COLORS.text,
-  },
-  cardArea: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  inputArea: {
-    paddingBottom: SPACING.xxl,
-  },
+  backButton: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
+  headerTitle: { fontSize: 17, fontWeight: '700', color: COLORS.text },
+  cardArea: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  inputArea: { paddingBottom: SPACING.xxl },
 });

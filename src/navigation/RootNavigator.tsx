@@ -7,6 +7,8 @@ import QuizScreen from '../screens/QuizScreen';
 import SpellingScreen from '../screens/SpellingScreen';
 import DailyChallengeScreen from '../screens/DailyChallengeScreen';
 import MorseCodeScreen from '../screens/MorseCodeScreen';
+import NatoFlashcardsScreen from '../screens/NatoFlashcardsScreen';
+import MorseFlashcardsScreen from '../screens/MorseFlashcardsScreen';
 import StatsScreen from '../screens/StatsScreen';
 import AchievementsScreen from '../screens/AchievementsScreen';
 import SettingsScreen from '../screens/SettingsScreen';
@@ -18,6 +20,8 @@ export type HomeStackParamList = {
   Spelling: undefined;
   DailyChallenge: undefined;
   MorseCode: undefined;
+  NatoFlashcards: undefined;
+  MorseFlashcards: undefined;
 };
 
 type TabParamList = {
@@ -52,6 +56,16 @@ function HomeStack() {
       <Stack.Screen
         name="MorseCode"
         component={MorseCodeScreen}
+        options={{ animation: 'slide_from_bottom' }}
+      />
+      <Stack.Screen
+        name="NatoFlashcards"
+        component={NatoFlashcardsScreen}
+        options={{ animation: 'slide_from_bottom' }}
+      />
+      <Stack.Screen
+        name="MorseFlashcards"
+        component={MorseFlashcardsScreen}
         options={{ animation: 'slide_from_bottom' }}
       />
     </Stack.Navigator>
