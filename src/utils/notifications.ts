@@ -1,40 +1,65 @@
-import * as Notifications from 'expo-notifications';
+let Notifications: any = null;
 
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldPlaySound: false,
-    shouldSetBadge: false,
-    shouldShowBanner: true,
-    shouldShowList: true,
-  }),
-});
+async function getNotifications(): Promise<any> {
+  if (!Notifications) {
+    try {
+      Notifications = await import('expo-notifications');
+      Notifications.setNotificationHandler({
+        handleNotification: async () => ({
+          shouldShowAlert: true,
+          shouldPlaySound: false,
+          shouldSetBadge: false,
+          shouldShowBanner: true,
+          shouldShowList: true,
+        }),
+      });
+    } catch {
+      return null;
+    }
+  }
+  return Notifications;
+}
 
 export async function requestNotificationPermission(): Promise<boolean> {
-  const { status: existing } = await Notifications.getPermissionsAsync();
-  if (existing === 'granted') return true;
-  const { status } = await Notifications.requestPermissionsAsync();
-  return status === 'granted';
+  const N = await getNotifications();
+  if (!N) return false;
+  try {
+    const { status: existing } = await N.getPermissionsAsync();
+    if (existing === 'granted') return true;
+    const { status } = await N.requestPermissionsAsync();
+    return status === 'granted';
+  } catch {
+    return false;
+  }
 }
 
 export async function scheduleDailyReminder(): Promise<void> {
-  // Cancel any existing reminders
-  await Notifications.cancelAllScheduledNotificationsAsync();
-
-  // Schedule daily at 7 PM
-  await Notifications.scheduleNotificationAsync({
-    content: {
-      title: 'NATO Quiz Reminder',
-      body: "Don't break your streak! Take a quick quiz today.",
-    },
-    trigger: {
-      type: Notifications.SchedulableTriggerInputTypes.DAILY,
-      hour: 19,
-      minute: 0,
-    },
-  });
+  const N = await getNotifications();
+  if (!N) return;
+  try {
+    await N.cancelAllScheduledNotificationsAsync();
+    await N.scheduleNotificationAsync({
+      content: {
+        title: 'NATO Quiz Reminder',
+        body: "Don't break your streak! Take a quick quiz today.",
+      },
+      trigger: {
+        type: N.SchedulableTriggerInputTypes.DAILY,
+        hour: 19,
+        minute: 0,
+      },
+    });
+  } catch {
+    // Notifications not available (Expo Go)
+  }
 }
 
 export async function cancelReminders(): Promise<void> {
-  await Notifications.cancelAllScheduledNotificationsAsync();
+  const N = await getNotifications();
+  if (!N) return;
+  try {
+    await N.cancelAllScheduledNotificationsAsync();
+  } catch {
+    // ignore
+  }
 }
