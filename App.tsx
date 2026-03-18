@@ -4,6 +4,8 @@ import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { NavigationContainer, DarkTheme } from '@react-navigation/native';
 import RootNavigator from './src/navigation/RootNavigator';
 import { useStatsStore } from './src/store/useStatsStore';
+import { useSettingsStore } from './src/store/useSettingsStore';
+import { loadSounds } from './src/utils/sounds';
 import { COLORS } from './src/constants/theme';
 
 const navTheme = {
@@ -18,14 +20,18 @@ const navTheme = {
 };
 
 export default function App() {
-  const load = useStatsStore((s) => s.load);
-  const isLoaded = useStatsStore((s) => s.isLoaded);
+  const loadStats = useStatsStore((s) => s.load);
+  const statsLoaded = useStatsStore((s) => s.isLoaded);
+  const loadSettingsFn = useSettingsStore((s) => s.load);
+  const settingsLoaded = useSettingsStore((s) => s.isLoaded);
 
   useEffect(() => {
-    load();
-  }, [load]);
+    loadStats();
+    loadSettingsFn();
+    loadSounds();
+  }, [loadStats, loadSettingsFn]);
 
-  if (!isLoaded) {
+  if (!statsLoaded || !settingsLoaded) {
     return (
       <View style={styles.loading}>
         <ActivityIndicator size="large" color={COLORS.primary} />

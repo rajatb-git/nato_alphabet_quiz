@@ -5,6 +5,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import HomeScreen from '../screens/HomeScreen';
 import QuizScreen from '../screens/QuizScreen';
 import StatsScreen from '../screens/StatsScreen';
+import SettingsScreen from '../screens/SettingsScreen';
 import { COLORS } from '../constants/theme';
 
 export type HomeStackParamList = {
@@ -15,6 +16,7 @@ export type HomeStackParamList = {
 type TabParamList = {
   HomeTab: undefined;
   Stats: undefined;
+  Settings: undefined;
 };
 
 const Stack = createNativeStackNavigator<HomeStackParamList>();
@@ -70,6 +72,15 @@ export default function RootNavigator() {
         options={{
           tabBarIcon: ({ color, size }) => (
             <MaterialCommunityIcons name="chart-bar" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="Settings"
+        component={SettingsScreen}
+        options={{
+          tabBarIcon: ({ color, size }) => (
+            <MaterialCommunityIcons name="cog" size={size} color={color} />
           ),
         }}
       />

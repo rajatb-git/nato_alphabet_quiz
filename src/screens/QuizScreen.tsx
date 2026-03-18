@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { StyleSheet, View, Text, TouchableOpacity, Keyboard } from 'react-native';
+import { StyleSheet, View, Text, TouchableOpacity, Keyboard, KeyboardAvoidingView } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
@@ -12,6 +12,8 @@ import ProgressBar from '../components/ProgressBar';
 import QuizSummary from '../components/QuizSummary';
 import { useQuizStore } from '../store/useQuizStore';
 import { useStatsStore } from '../store/useStatsStore';
+import { useSettingsStore } from '../store/useSettingsStore';
+import { playCorrect, playWrong } from '../utils/sounds';
 import { NATO_ALPHABET } from '../constants/nato';
 import { COLORS, SPACING } from '../constants/theme';
 import type { HomeStackParamList } from '../navigation/RootNavigator';
@@ -34,6 +36,9 @@ export default function QuizScreen({ route, navigation }: Props) {
   const recordAnswer = useStatsStore((s) => s.recordAnswer);
   const recordSessionComplete = useStatsStore((s) => s.recordSessionComplete);
   const getWeakLetters = useStatsStore((s) => s.getWeakLetters);
+
+  const hapticEnabled = useSettingsStore((s) => s.settings.hapticEnabled);
+  const soundEnabled = useSettingsStore((s) => s.settings.soundEnabled);
 
   const [answer, setAnswer] = useState('');
   const [feedback, setFeedback] = useState<{
@@ -62,14 +67,20 @@ export default function QuizScreen({ route, navigation }: Props) {
     const result = submitAnswer(answer);
     recordAnswer(currentQuestion!.letter, result.isCorrect);
 
-    Haptics.notificationAsync(
-      result.isCorrect
-        ? Haptics.NotificationFeedbackType.Success
-        : Haptics.NotificationFeedbackType.Error,
-    );
+    if (hapticEnabled) {
+      Haptics.notificationAsync(
+        result.isCorrect
+          ? Haptics.NotificationFeedbackType.Success
+          : Haptics.NotificationFeedbackType.Error,
+      );
+    }
+
+    if (soundEnabled) {
+      result.isCorrect ? playCorrect() : playWrong();
+    }
 
     setFeedback(result);
-  }, [answer, feedback, submitAnswer, recordAnswer, currentQuestion]);
+  }, [answer, feedback, submitAnswer, recordAnswer, currentQuestion, hapticEnabled, soundEnabled]);
 
   const handleFeedbackDismiss = useCallback(() => {
     setFeedback(null);
@@ -100,6 +111,7 @@ export default function QuizScreen({ route, navigation }: Props) {
 
   return (
     <GradientBackground>
+      <KeyboardAvoidingView style={styles.flex} behavior="padding">
       <View style={[styles.container, { paddingTop: insets.top + SPACING.sm }]}>
         {/* Header */}
         <View style={styles.header}>
@@ -146,11 +158,15 @@ export default function QuizScreen({ route, navigation }: Props) {
           <QuizSummary session={completedSession} onDone={handleDone} />
         )}
       </View>
+      </KeyboardAvoidingView>
     </GradientBackground>
   );
 }
 
 const styles = StyleSheet.create({
+  flex: {
+    flex: 1,
+  },
   container: {
     flex: 1,
   },

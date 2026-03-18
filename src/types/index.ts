@@ -28,6 +28,11 @@ export interface QuizQuestion {
   answeredAt: string | null;
 }
 
+export interface Settings {
+  hapticEnabled: boolean;
+  soundEnabled: boolean;
+}
+
 export interface QuizSession {
   mode: 'random' | 'weak';
   questions: QuizQuestion[];
