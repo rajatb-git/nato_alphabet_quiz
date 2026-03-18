@@ -56,7 +56,7 @@ export default function DailyChallengeScreen({ navigation }: Props) {
 
   const correctPlayer = useAudioPlayer(correctSource);
   const wrongPlayer = useAudioPlayer(wrongSource);
-  const { flashColor, correction, showFeedback, dismissCorrection } = useQuizFeedback();
+  const { flashColor, banner, showFeedback, dismissBanner } = useQuizFeedback();
 
   const [questions, setQuestions] = useState<QuizQuestion[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -193,7 +193,7 @@ export default function DailyChallengeScreen({ navigation }: Props) {
           <ProgressBar current={currentIndex} total={questions.length} correct={correctCount} />
 
           <View style={styles.cardArea}>
-            {correction && <CorrectionBanner correctAnswer={correction} onDismiss={dismissCorrection} />}
+            {banner && <CorrectionBanner text={banner.text} variant={banner.variant} onDismiss={dismissBanner} />}
             <LetterCard letter={currentQuestion.letter} flashColor={flashColor} />
           </View>
 

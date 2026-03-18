@@ -1,22 +1,31 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 
+export interface BannerState {
+  text: string;
+  variant: 'success' | 'error';
+}
+
 export function useQuizFeedback() {
   const [flashColor, setFlashColor] = useState<'success' | 'error' | null>(null);
-  const [correction, setCorrection] = useState<string | null>(null);
+  const [banner, setBanner] = useState<BannerState | null>(null);
   const flashTimeout = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   const showFeedback = useCallback((isCorrect: boolean, correctAnswer: string) => {
     if (flashTimeout.current) clearTimeout(flashTimeout.current);
     setFlashColor(isCorrect ? 'success' : 'error');
-    setCorrection(isCorrect ? null : correctAnswer);
+    setBanner(
+      isCorrect
+        ? { text: 'Correct!', variant: 'success' }
+        : { text: `Answer: ${correctAnswer}`, variant: 'error' },
+    );
     flashTimeout.current = setTimeout(() => setFlashColor(null), 400);
   }, []);
 
-  const dismissCorrection = useCallback(() => setCorrection(null), []);
+  const dismissBanner = useCallback(() => setBanner(null), []);
 
   useEffect(() => () => {
     if (flashTimeout.current) clearTimeout(flashTimeout.current);
   }, []);
 
-  return { flashColor, correction, showFeedback, dismissCorrection };
+  return { flashColor, banner, showFeedback, dismissBanner };
 }

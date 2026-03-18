@@ -34,7 +34,7 @@ export default function SpellingScreen({ navigation }: Props) {
 
   const correctPlayer = useAudioPlayer(correctSource);
   const wrongPlayer = useAudioPlayer(wrongSource);
-  const { flashColor, correction, showFeedback, dismissCorrection } = useQuizFeedback();
+  const { flashColor, banner, showFeedback, dismissBanner } = useQuizFeedback();
 
   const [word, setWord] = useState('');
   const [letterIndex, setLetterIndex] = useState(0);
@@ -150,7 +150,7 @@ export default function SpellingScreen({ navigation }: Props) {
           <ProgressBar current={overallProgress} total={totalLetters} correct={correctCount} />
 
           <View style={styles.cardArea}>
-            {correction && <CorrectionBanner correctAnswer={correction} onDismiss={dismissCorrection} />}
+            {banner && <CorrectionBanner text={banner.text} variant={banner.variant} onDismiss={dismissBanner} />}
             <Text style={styles.wordLabel}>Spell this word:</Text>
             <View style={styles.wordRow}>
               {word.split('').map((char, i) => {

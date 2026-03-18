@@ -48,7 +48,7 @@ export default function QuizScreen({ route, navigation }: Props) {
   const correctPlayer = useAudioPlayer(correctSource);
   const wrongPlayer = useAudioPlayer(wrongSource);
 
-  const { flashColor, correction, showFeedback, dismissCorrection } = useQuizFeedback();
+  const { flashColor, banner, showFeedback, dismissBanner } = useQuizFeedback();
 
   const [answer, setAnswer] = useState('');
   const [completedSession, setCompletedSession] = useState<QuizSession | null>(null);
@@ -147,7 +147,7 @@ export default function QuizScreen({ route, navigation }: Props) {
           <ProgressBar current={session.currentIndex} total={session.questions.length} correct={correctCount} />
 
           <View style={styles.cardArea}>
-            {correction && <CorrectionBanner correctAnswer={correction} onDismiss={dismissCorrection} />}
+            {banner && <CorrectionBanner text={banner.text} variant={banner.variant} onDismiss={dismissBanner} />}
             <LetterCard letter={currentQuestion.letter} flashColor={flashColor} />
           </View>
 

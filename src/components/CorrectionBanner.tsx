@@ -6,16 +6,19 @@ import Animated, {
   withTiming,
   runOnJS,
 } from 'react-native-reanimated';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { COLORS, SPACING, BORDER_RADIUS } from '../constants/theme';
 
 interface Props {
-  correctAnswer: string;
+  text: string;
+  variant: 'success' | 'error';
   onDismiss: () => void;
 }
 
-export default function CorrectionBanner({ correctAnswer, onDismiss }: Props) {
+export default function CorrectionBanner({ text, variant, onDismiss }: Props) {
   const translateY = useSharedValue(-44);
   const opacity = useSharedValue(0);
+  const duration = variant === 'success' ? 1000 : 2000;
 
   useEffect(() => {
     translateY.value = withTiming(0, { duration: 200 });
@@ -25,21 +28,33 @@ export default function CorrectionBanner({ correctAnswer, onDismiss }: Props) {
       opacity.value = withTiming(0, { duration: 200 });
       translateY.value = withTiming(-44, { duration: 200 });
       setTimeout(() => runOnJS(onDismiss)(), 250);
-    }, 2000);
+    }, duration);
 
     return () => clearTimeout(timer);
-  }, [correctAnswer, translateY, opacity, onDismiss]);
+  }, [text, variant, translateY, opacity, onDismiss, duration]);
 
   const animStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: translateY.value }],
     opacity: opacity.value,
   }));
 
+  const isSuccess = variant === 'success';
+
   return (
-    <Animated.View style={[styles.banner, animStyle]} pointerEvents="none">
-      <Text style={styles.text}>
-        Answer: <Text style={styles.answer}>{correctAnswer}</Text>
-      </Text>
+    <Animated.View
+      style={[
+        styles.banner,
+        isSuccess ? styles.bannerSuccess : styles.bannerError,
+        animStyle,
+      ]}
+      pointerEvents="none"
+    >
+      <MaterialCommunityIcons
+        name={isSuccess ? 'check-circle' : 'close-circle'}
+        size={18}
+        color={isSuccess ? COLORS.success : COLORS.error}
+      />
+      <Text style={styles.text}>{text}</Text>
     </Animated.View>
   );
 }
@@ -50,21 +65,27 @@ const styles = StyleSheet.create({
     top: 0,
     left: SPACING.lg,
     right: SPACING.lg,
-    backgroundColor: 'rgba(239,68,68,0.2)',
     borderWidth: 1,
-    borderColor: COLORS.error,
     borderRadius: BORDER_RADIUS.md,
     paddingVertical: SPACING.sm,
     paddingHorizontal: SPACING.md,
     zIndex: 5,
+    flexDirection: 'row',
     alignItems: 'center',
+    gap: SPACING.sm,
+    justifyContent: 'center',
+  },
+  bannerSuccess: {
+    backgroundColor: 'rgba(16,185,129,0.2)',
+    borderColor: COLORS.success,
+  },
+  bannerError: {
+    backgroundColor: 'rgba(239,68,68,0.2)',
+    borderColor: COLORS.error,
   },
   text: {
     fontSize: 15,
-    color: COLORS.textSecondary,
-  },
-  answer: {
-    fontWeight: '700',
+    fontWeight: '600',
     color: COLORS.text,
   },
 });
