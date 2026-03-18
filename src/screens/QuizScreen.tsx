@@ -28,7 +28,8 @@ export default function QuizScreen({ route, navigation }: Props) {
   const nextQuestion = useQuizStore((s) => s.nextQuestion);
   const endQuiz = useQuizStore((s) => s.endQuiz);
   const session = useQuizStore((s) => s.session);
-  const currentQuestion = useQuizStore((s) => s.currentQuestion());
+  const getCurrentQuestion = useQuizStore((s) => s.currentQuestion);
+  const currentQuestion = getCurrentQuestion();
 
   const recordAnswer = useStatsStore((s) => s.recordAnswer);
   const recordSessionComplete = useStatsStore((s) => s.recordSessionComplete);

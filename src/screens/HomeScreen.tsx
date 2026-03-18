@@ -23,8 +23,10 @@ export default function HomeScreen() {
   const nav = useNavigation<Nav>();
   const insets = useSafeAreaInsets();
   const stats = useStatsStore((s) => s.stats);
-  const todayRecord = useStatsStore((s) => s.getTodayRecord());
-  const weakLetters = useStatsStore((s) => s.getWeakLetters());
+  const getTodayRecord = useStatsStore((s) => s.getTodayRecord);
+  const getWeakLetters = useStatsStore((s) => s.getWeakLetters);
+  const todayRecord = getTodayRecord();
+  const weakLetters = getWeakLetters();
 
   const todayAccuracy = formatPercent(
     todayRecord.totalCorrect,
