@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "NATO Quiz",
-    "slug": "nato-alphabet-quiz",
+    "name": "Alpha Bravo",
+    "slug": "alpha-bravo",
     "sdkVersion": "55.0.0",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -16,7 +16,7 @@
       "supportsTablet": true
     },
     "android": {
-      "package": "com.natoquiz.app",
+      "package": "com.alphabravo.app",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/android-icon-foreground.png",
