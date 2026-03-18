@@ -5,6 +5,7 @@ import { NavigationContainer, DarkTheme } from '@react-navigation/native';
 import RootNavigator from './src/navigation/RootNavigator';
 import { useStatsStore } from './src/store/useStatsStore';
 import { useSettingsStore } from './src/store/useSettingsStore';
+import { useAchievementsStore } from './src/store/useAchievementsStore';
 import { COLORS } from './src/constants/theme';
 
 const navTheme = {
@@ -23,13 +24,16 @@ export default function App() {
   const statsLoaded = useStatsStore((s) => s.isLoaded);
   const loadSettingsFn = useSettingsStore((s) => s.load);
   const settingsLoaded = useSettingsStore((s) => s.isLoaded);
+  const loadAchievementsFn = useAchievementsStore((s) => s.load);
+  const achievementsLoaded = useAchievementsStore((s) => s.isLoaded);
 
   useEffect(() => {
     loadStats();
     loadSettingsFn();
-  }, [loadStats, loadSettingsFn]);
+    loadAchievementsFn();
+  }, [loadStats, loadSettingsFn, loadAchievementsFn]);
 
-  if (!statsLoaded || !settingsLoaded) {
+  if (!statsLoaded || !settingsLoaded || !achievementsLoaded) {
     return (
       <View style={styles.loading}>
         <ActivityIndicator size="large" color={COLORS.primary} />

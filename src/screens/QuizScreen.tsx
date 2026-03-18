@@ -14,6 +14,7 @@ import QuizSummary from '../components/QuizSummary';
 import { useQuizStore } from '../store/useQuizStore';
 import { useStatsStore } from '../store/useStatsStore';
 import { useSettingsStore } from '../store/useSettingsStore';
+import { useAchievementsStore } from '../store/useAchievementsStore';
 import { correctSource, wrongSource } from '../utils/sounds';
 import { NATO_ALPHABET } from '../constants/nato';
 import { COLORS, SPACING } from '../constants/theme';
@@ -40,6 +41,7 @@ export default function QuizScreen({ route, navigation }: Props) {
 
   const hapticEnabled = useSettingsStore((s) => s.settings.hapticEnabled);
   const soundEnabled = useSettingsStore((s) => s.settings.soundEnabled);
+  const checkAchievements = useAchievementsStore((s) => s.checkAndUnlock);
 
   const correctPlayer = useAudioPlayer(correctSource);
   const wrongPlayer = useAudioPlayer(wrongSource);
@@ -100,9 +102,14 @@ export default function QuizScreen({ route, navigation }: Props) {
     if (!hasNext) {
       recordSessionComplete();
       const completed = endQuiz();
+      if (completed) {
+        const score = completed.questions.filter((q) => q.isCorrect).length;
+        const elapsed = (Date.now() - new Date(completed.startedAt).getTime()) / 1000;
+        checkAchievements({ score, total: completed.questions.length, quizTime: elapsed });
+      }
       setCompletedSession(completed);
     }
-  }, [nextQuestion, endQuiz, recordSessionComplete]);
+  }, [nextQuestion, endQuiz, recordSessionComplete, checkAchievements]);
 
   const handleDone = useCallback(() => {
     navigation.goBack();

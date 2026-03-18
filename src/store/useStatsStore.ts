@@ -8,7 +8,7 @@ interface StatsStore {
   isLoaded: boolean;
   load: () => Promise<void>;
   recordAnswer: (letter: string, correct: boolean) => void;
-  recordSessionComplete: () => void;
+  recordSessionComplete: (mode?: string) => void;
   getWeakLetters: () => string[];
   getTodayRecord: () => DailyRecord;
 }
@@ -80,7 +80,7 @@ export const useStatsStore = create<StatsStore>((set, get) => ({
     saveStats(newStats);
   },
 
-  recordSessionComplete: () => {
+  recordSessionComplete: (mode?: string) => {
     const { stats } = get();
     const today = getTodayDate();
     const dayRecord = stats.dailyRecords[today] ?? emptyDay(today);
@@ -89,6 +89,10 @@ export const useStatsStore = create<StatsStore>((set, get) => ({
     const newStats: UserStats = {
       ...stats,
       dailyRecords: { ...stats.dailyRecords, [today]: dayRecord },
+      totalSessions: (stats.totalSessions ?? 0) + 1,
+      spellingCompleted: (stats.spellingCompleted ?? 0) + (mode === 'spelling' ? 1 : 0),
+      morseCompleted: (stats.morseCompleted ?? 0) + (mode === 'morse' ? 1 : 0),
+      dailyChallengesCompleted: (stats.dailyChallengesCompleted ?? 0) + (mode === 'daily' ? 1 : 0),
     };
     set({ stats: newStats });
     saveStats(newStats);

@@ -8,6 +8,7 @@ import {
   clearAllData,
 } from '../utils/storage';
 import { useStatsStore } from './useStatsStore';
+import { requestNotificationPermission, scheduleDailyReminder, cancelReminders } from '../utils/notifications';
 
 interface SettingsStore {
   settings: Settings;
@@ -15,6 +16,7 @@ interface SettingsStore {
   load: () => Promise<void>;
   setHaptic: (enabled: boolean) => void;
   setSound: (enabled: boolean) => void;
+  setNotifications: (enabled: boolean) => Promise<void>;
   clearHistory: () => Promise<void>;
 }
 
@@ -35,6 +37,19 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
 
   setSound: (enabled: boolean) => {
     const settings = { ...get().settings, soundEnabled: enabled };
+    set({ settings });
+    saveSettings(settings);
+  },
+
+  setNotifications: async (enabled: boolean) => {
+    if (enabled) {
+      const granted = await requestNotificationPermission();
+      if (!granted) return;
+      await scheduleDailyReminder();
+    } else {
+      await cancelReminders();
+    }
+    const settings = { ...get().settings, notificationsEnabled: enabled };
     set({ settings });
     saveSettings(settings);
   },

@@ -151,6 +151,66 @@ export default function HomeScreen() {
           </View>
         </TouchableOpacity>
 
+        {/* More Modes */}
+        <Text style={[styles.sectionTitle, { marginTop: SPACING.md }]}>More Modes</Text>
+
+        <TouchableOpacity
+          style={styles.quizCard}
+          activeOpacity={0.8}
+          onPress={() => nav.navigate('DailyChallenge')}
+        >
+          <View style={styles.quizCardContent}>
+            <View style={[styles.quizIcon, { backgroundColor: 'rgba(245,158,11,0.2)' }]}>
+              <MaterialCommunityIcons name="calendar-today" size={32} color={COLORS.warning} />
+            </View>
+            <View style={styles.quizCardText}>
+              <Text style={styles.quizCardTitle}>Daily Challenge</Text>
+              <Text style={styles.quizCardDesc}>
+                A new set of 10 letters every day
+              </Text>
+            </View>
+            <MaterialCommunityIcons name="chevron-right" size={24} color={COLORS.textMuted} />
+          </View>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.quizCard}
+          activeOpacity={0.8}
+          onPress={() => nav.navigate('Spelling')}
+        >
+          <View style={styles.quizCardContent}>
+            <View style={[styles.quizIcon, { backgroundColor: 'rgba(59,130,246,0.2)' }]}>
+              <MaterialCommunityIcons name="spellcheck" size={32} color="#3b82f6" />
+            </View>
+            <View style={styles.quizCardText}>
+              <Text style={styles.quizCardTitle}>Spelling Mode</Text>
+              <Text style={styles.quizCardDesc}>
+                Spell words using NATO phonetic alphabet
+              </Text>
+            </View>
+            <MaterialCommunityIcons name="chevron-right" size={24} color={COLORS.textMuted} />
+          </View>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.quizCard}
+          activeOpacity={0.8}
+          onPress={() => nav.navigate('MorseCode')}
+        >
+          <View style={styles.quizCardContent}>
+            <View style={[styles.quizIcon, { backgroundColor: 'rgba(236,72,153,0.2)' }]}>
+              <MaterialCommunityIcons name="dots-horizontal" size={32} color="#ec4899" />
+            </View>
+            <View style={styles.quizCardText}>
+              <Text style={styles.quizCardTitle}>Morse Code</Text>
+              <Text style={styles.quizCardDesc}>
+                Identify letters from morse code patterns
+              </Text>
+            </View>
+            <MaterialCommunityIcons name="chevron-right" size={24} color={COLORS.textMuted} />
+          </View>
+        </TouchableOpacity>
+
         {/* Streak info */}
         {stats.longestStreak > 0 && (
           <View style={styles.streakInfo}>
