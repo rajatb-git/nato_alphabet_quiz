@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "Alpha Bravo",
-    "slug": "alpha-bravo",
+    "name": "Alpha Bravo Quiz",
+    "slug": "alpha-bravo-quiz",
     "sdkVersion": "55.0.0",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -16,7 +16,7 @@
       "supportsTablet": true
     },
     "android": {
-      "package": "com.alphabravo.app",
+      "package": "com.alphabravoquiz.app",
       "versionCode": 1,
       "adaptiveIcon": {
         "backgroundColor": "#0f0c29",
