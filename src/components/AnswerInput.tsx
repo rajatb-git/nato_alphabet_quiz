@@ -1,11 +1,11 @@
-import React, { useRef, useEffect } from 'react';
-import {
-  StyleSheet,
-  TextInput,
-  TouchableOpacity,
-  View,
-  Text,
-} from 'react-native';
+import React, { useRef, useEffect, forwardRef, useImperativeHandle } from 'react';
+import { StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  interpolateColor,
+} from 'react-native-reanimated';
 import { COLORS, SPACING, BORDER_RADIUS } from '../constants/theme';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
@@ -14,27 +14,53 @@ interface Props {
   onChangeText: (text: string) => void;
   onSubmit: () => void;
   disabled?: boolean;
+  flashColor?: 'success' | 'error' | null;
 }
 
-export default function AnswerInput({
-  value,
-  onChangeText,
-  onSubmit,
-  disabled,
-}: Props) {
+export interface AnswerInputHandle {
+  focus: () => void;
+}
+
+const AnimatedTextInput = Animated.createAnimatedComponent(TextInput);
+
+export default forwardRef<AnswerInputHandle, Props>(function AnswerInput(
+  { value, onChangeText, onSubmit, disabled, flashColor },
+  ref,
+) {
   const inputRef = useRef<TextInput>(null);
+  const flash = useSharedValue(0);
+
+  useImperativeHandle(ref, () => ({
+    focus: () => inputRef.current?.focus(),
+  }));
 
   useEffect(() => {
     if (!disabled) {
-      setTimeout(() => inputRef.current?.focus(), 300);
+      setTimeout(() => inputRef.current?.focus(), 100);
     }
   }, [disabled]);
 
+  useEffect(() => {
+    if (flashColor) {
+      flash.value = 1;
+      flash.value = withTiming(0, { duration: 400 });
+    }
+  }, [flashColor, flash]);
+
+  const inputBorderStyle = useAnimatedStyle(() => {
+    const color = flashColor === 'success'
+      ? interpolateColor(flash.value, [0, 1], [COLORS.cardBorder, COLORS.success])
+      : flashColor === 'error'
+        ? interpolateColor(flash.value, [0, 1], [COLORS.cardBorder, COLORS.error])
+        : COLORS.cardBorder;
+    return { borderColor: color };
+  });
+
   return (
     <View style={styles.container}>
-      <TextInput
+      <AnimatedTextInput
         ref={inputRef}
-        style={styles.input}
+        style={[styles.input, inputBorderStyle]}
         value={value}
         onChangeText={onChangeText}
         onSubmitEditing={onSubmit}
@@ -56,7 +82,7 @@ export default function AnswerInput({
       </TouchableOpacity>
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   container: {
@@ -73,7 +99,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: SPACING.lg,
     fontSize: 18,
     color: COLORS.text,
-    borderWidth: 1,
+    borderWidth: 2,
     borderColor: COLORS.cardBorder,
   },
   button: {

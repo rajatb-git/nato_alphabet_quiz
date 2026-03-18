@@ -11,6 +11,7 @@ export default function SettingsScreen() {
   const settings = useSettingsStore((s) => s.settings);
   const setHaptic = useSettingsStore((s) => s.setHaptic);
   const setSound = useSettingsStore((s) => s.setSound);
+  const setNotifications = useSettingsStore((s) => s.setNotifications);
   const clearHistory = useSettingsStore((s) => s.clearHistory);
 
   const handleClearHistory = () => {
@@ -69,6 +70,25 @@ export default function SettingsScreen() {
           </View>
         </View>
 
+        {/* Notifications section */}
+        <Text style={styles.sectionLabel}>Notifications</Text>
+
+        <View style={styles.card}>
+          <View style={styles.row}>
+            <View style={styles.rowLeft}>
+              <MaterialCommunityIcons name="bell-outline" size={22} color={COLORS.primary} />
+              <Text style={styles.rowLabel}>Daily Reminder</Text>
+            </View>
+            <Switch
+              value={settings.notificationsEnabled}
+              onValueChange={setNotifications}
+              trackColor={{ false: COLORS.inputBackground, true: COLORS.primaryDark }}
+              thumbColor={settings.notificationsEnabled ? COLORS.primary : COLORS.textMuted}
+            />
+          </View>
+          <Text style={styles.rowHint}>Get reminded at 7 PM to keep your streak</Text>
+        </View>
+
         {/* Data section */}
         <Text style={styles.sectionLabel}>Data</Text>
 
@@ -77,7 +97,7 @@ export default function SettingsScreen() {
           <Text style={styles.dangerText}>Clear All Data</Text>
         </TouchableOpacity>
 
-        <Text style={styles.version}>NATO Quiz v1.0.0</Text>
+        <Text style={styles.version}>Alpha Bravo v1.0.0</Text>
       </ScrollView>
     </GradientBackground>
   );
@@ -149,6 +169,13 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: COLORS.error,
     fontWeight: '600',
+  },
+  rowHint: {
+    fontSize: 12,
+    color: COLORS.textMuted,
+    paddingHorizontal: SPACING.md,
+    paddingBottom: SPACING.md,
+    marginTop: -SPACING.sm,
   },
   version: {
     textAlign: 'center',

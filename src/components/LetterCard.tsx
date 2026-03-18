@@ -4,16 +4,20 @@ import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withSpring,
+  withTiming,
+  interpolateColor,
 } from 'react-native-reanimated';
 import { COLORS, BORDER_RADIUS, SPACING } from '../constants/theme';
 
 interface Props {
   letter: string;
+  flashColor?: 'success' | 'error' | null;
 }
 
-export default function LetterCard({ letter }: Props) {
+export default function LetterCard({ letter, flashColor }: Props) {
   const scale = useSharedValue(0.5);
   const opacity = useSharedValue(0);
+  const flash = useSharedValue(0);
 
   useEffect(() => {
     scale.value = 0.5;
@@ -22,14 +26,30 @@ export default function LetterCard({ letter }: Props) {
     opacity.value = withSpring(1);
   }, [letter, scale, opacity]);
 
+  useEffect(() => {
+    if (flashColor) {
+      flash.value = 1;
+      flash.value = withTiming(0, { duration: 400 });
+    }
+  }, [flashColor, flash]);
+
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
     opacity: opacity.value,
   }));
 
+  const borderStyle = useAnimatedStyle(() => {
+    const color = flashColor === 'success'
+      ? interpolateColor(flash.value, [0, 1], [COLORS.cardBorder, COLORS.success])
+      : flashColor === 'error'
+        ? interpolateColor(flash.value, [0, 1], [COLORS.cardBorder, COLORS.error])
+        : COLORS.cardBorder;
+    return { borderColor: color };
+  });
+
   return (
     <View style={styles.container}>
-      <Animated.View style={[styles.card, animatedStyle]}>
+      <Animated.View style={[styles.card, animatedStyle, borderStyle]}>
         <Animated.Text style={styles.letter}>{letter}</Animated.Text>
       </Animated.View>
     </View>
@@ -47,7 +67,7 @@ const styles = StyleSheet.create({
     height: 200,
     borderRadius: BORDER_RADIUS.xl,
     backgroundColor: COLORS.backgroundCard,
-    borderWidth: 1,
+    borderWidth: 2,
     borderColor: COLORS.cardBorder,
     alignItems: 'center',
     justifyContent: 'center',

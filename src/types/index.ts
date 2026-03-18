@@ -18,6 +18,10 @@ export interface UserStats {
   currentStreak: number;
   longestStreak: number;
   lastActiveDate: string | null;
+  totalSessions: number;
+  spellingCompleted: number;
+  morseCompleted: number;
+  dailyChallengesCompleted: number;
 }
 
 export interface QuizQuestion {
@@ -31,6 +35,7 @@ export interface QuizQuestion {
 export interface Settings {
   hapticEnabled: boolean;
   soundEnabled: boolean;
+  notificationsEnabled: boolean;
 }
 
 export interface QuizSession {
@@ -39,4 +44,18 @@ export interface QuizSession {
   currentIndex: number;
   startedAt: string;
   completedAt: string | null;
+}
+
+export interface Achievement {
+  id: string;
+  unlockedAt: string;
+}
+
+export interface DailyChallenge {
+  date: string;
+  seed: number;
+  letters: string[];
+  completed: boolean;
+  score: number | null;
+  total: number;
 }

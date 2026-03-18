@@ -60,3 +60,24 @@ export function isCorrectAnswer(letter: string, answer: string): boolean {
   }
   return false;
 }
+
+// Morse code mapping
+export const MORSE_MAP: Record<string, string> = {
+  A: '.-', B: '-...', C: '-.-.', D: '-..', E: '.', F: '..-.',
+  G: '--.', H: '....', I: '..', J: '.---', K: '-.-', L: '.-..',
+  M: '--', N: '-.', O: '---', P: '.--.', Q: '--.-', R: '.-.',
+  S: '...', T: '-', U: '..-', V: '...-', W: '.--', X: '-..-',
+  Y: '-.--', Z: '--..',
+};
+
+// Common words for spelling mode (3-6 letters, practical/military themed)
+export const SPELLING_WORDS = [
+  'HELP', 'STOP', 'FIRE', 'MOVE', 'COPY', 'HOLD',
+  'BASE', 'TEAM', 'ZONE', 'SAFE', 'CALL', 'UNIT',
+  'LAND', 'FUEL', 'CAMP', 'GATE', 'CODE', 'LOCK',
+  'MARK', 'PLAN', 'ROAD', 'WAVE', 'DUST', 'HAWK',
+  'IRON', 'JUMP', 'KING', 'QUAD', 'VETO', 'WELD',
+  'EXIT', 'YORK', 'ZERO', 'NAVY', 'ARMY', 'GULF',
+  'SOS', 'RUN', 'AID', 'MAP', 'HIT', 'FOG',
+  'ALPHA', 'BRAVO', 'DELTA', 'OSCAR', 'TANGO', 'ROMEO',
+];

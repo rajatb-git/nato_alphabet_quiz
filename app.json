@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "NATO Quiz",
-    "slug": "nato-alphabet-quiz",
+    "name": "Alpha Bravo Quiz",
+    "slug": "alpha-bravo-quiz",
     "sdkVersion": "55.0.0",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -16,19 +16,33 @@
       "supportsTablet": true
     },
     "android": {
+      "package": "com.alphabravoquiz.app",
+      "versionCode": 1,
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#0f0c29",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
+      "permissions": [
+        "RECEIVE_BOOT_COMPLETED",
+        "VIBRATE",
+        "SCHEDULE_EXACT_ALARM"
+      ],
       "predictiveBackGestureEnabled": false
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
-      "expo-audio"
+      "expo-audio",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/notification-icon.png",
+          "color": "#302b63"
+        }
+      ]
     ]
   }
 }
