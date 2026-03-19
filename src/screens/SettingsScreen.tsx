@@ -166,7 +166,7 @@ export default function SettingsScreen() {
           <Text style={styles.dangerText}>Clear All Data</Text>
         </TouchableOpacity>
 
-        <Text style={styles.version}>Alpha Bravo Quiz v1.0.0</Text>
+        <Text style={styles.version}>Alpha Bravo Quiz v1.1.0</Text>
       </ScrollView>
 
       <Modal visible={showTimePicker} transparent animationType="fade">
