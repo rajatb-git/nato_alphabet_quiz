@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, View, Text, ScrollView, Switch, TouchableOpacity, Alert } from 'react-native';
+import { StyleSheet, View, Text, ScrollView, Switch, TouchableOpacity, Alert, Linking } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import GradientBackground from '../components/GradientBackground';
@@ -89,6 +89,41 @@ export default function SettingsScreen() {
           <Text style={styles.rowHint}>Get reminded at 7 PM to keep your streak</Text>
         </View>
 
+        {/* Support section */}
+        <Text style={styles.sectionLabel}>Support the App</Text>
+
+        <View style={styles.card}>
+          <Text style={styles.supportMessage}>
+            Alpha Bravo Quiz is free with no ads. If you find it useful, consider buying me a coffee!
+          </Text>
+          <View style={styles.tipRow}>
+            <TouchableOpacity
+              style={styles.tipButton}
+              activeOpacity={0.7}
+              onPress={() => Linking.openURL('https://buymeacoffee.com/YOUR_USERNAME')}
+            >
+              <Text style={styles.tipEmoji}>☕</Text>
+              <Text style={styles.tipAmount}>$1</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.tipButton}
+              activeOpacity={0.7}
+              onPress={() => Linking.openURL('https://buymeacoffee.com/YOUR_USERNAME')}
+            >
+              <Text style={styles.tipEmoji}>☕☕</Text>
+              <Text style={styles.tipAmount}>$3</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.tipButton}
+              activeOpacity={0.7}
+              onPress={() => Linking.openURL('https://buymeacoffee.com/YOUR_USERNAME')}
+            >
+              <Text style={styles.tipEmoji}>☕☕☕</Text>
+              <Text style={styles.tipAmount}>$5</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
         {/* Data section */}
         <Text style={styles.sectionLabel}>Data</Text>
 
@@ -176,6 +211,36 @@ const styles = StyleSheet.create({
     paddingHorizontal: SPACING.md,
     paddingBottom: SPACING.md,
     marginTop: -SPACING.sm,
+  },
+  supportMessage: {
+    fontSize: 14,
+    color: COLORS.textSecondary,
+    lineHeight: 20,
+    paddingHorizontal: SPACING.md,
+    paddingTop: SPACING.md,
+    paddingBottom: SPACING.sm,
+  },
+  tipRow: {
+    flexDirection: 'row',
+    gap: SPACING.sm,
+    paddingHorizontal: SPACING.md,
+    paddingBottom: SPACING.md,
+  },
+  tipButton: {
+    flex: 1,
+    backgroundColor: COLORS.inputBackground,
+    borderRadius: BORDER_RADIUS.md,
+    paddingVertical: SPACING.sm + 2,
+    alignItems: 'center',
+    gap: 2,
+  },
+  tipEmoji: {
+    fontSize: 18,
+  },
+  tipAmount: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: COLORS.primary,
   },
   version: {
     textAlign: 'center',
