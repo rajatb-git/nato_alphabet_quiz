@@ -1,5 +1,5 @@
-import React from 'react';
-import { StyleSheet, View, Text, ScrollView, Switch, TouchableOpacity, Alert, Linking } from 'react-native';
+import React, { useState } from 'react';
+import { StyleSheet, View, Text, ScrollView, Switch, TouchableOpacity, Alert, Linking, Modal, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import GradientBackground from '../components/GradientBackground';
@@ -12,7 +12,30 @@ export default function SettingsScreen() {
   const setHaptic = useSettingsStore((s) => s.setHaptic);
   const setSound = useSettingsStore((s) => s.setSound);
   const setNotifications = useSettingsStore((s) => s.setNotifications);
+  const setReminderTime = useSettingsStore((s) => s.setReminderTime);
   const clearHistory = useSettingsStore((s) => s.clearHistory);
+
+  const [showTimePicker, setShowTimePicker] = useState(false);
+  const [pickerHour, setPickerHour] = useState(settings.reminderHour);
+  const [pickerMinute, setPickerMinute] = useState(settings.reminderMinute);
+
+  const formatTime = (hour: number, minute: number) => {
+    const period = hour >= 12 ? 'PM' : 'AM';
+    const h = hour % 12 || 12;
+    const m = minute.toString().padStart(2, '0');
+    return `${h}:${m} ${period}`;
+  };
+
+  const openTimePicker = () => {
+    setPickerHour(settings.reminderHour);
+    setPickerMinute(settings.reminderMinute);
+    setShowTimePicker(true);
+  };
+
+  const confirmTime = () => {
+    setReminderTime(pickerHour, pickerMinute);
+    setShowTimePicker(false);
+  };
 
   const handleClearHistory = () => {
     Alert.alert(
@@ -86,7 +109,18 @@ export default function SettingsScreen() {
               thumbColor={settings.notificationsEnabled ? COLORS.primary : COLORS.textMuted}
             />
           </View>
-          <Text style={styles.rowHint}>Get reminded at 7 PM to keep your streak</Text>
+
+          <View style={styles.separator} />
+
+          <TouchableOpacity style={styles.row} onPress={openTimePicker} activeOpacity={0.7}>
+            <View style={styles.rowLeft}>
+              <MaterialCommunityIcons name="clock-outline" size={22} color={COLORS.primary} />
+              <Text style={styles.rowLabel}>Reminder Time</Text>
+            </View>
+            <Text style={styles.timeValue}>
+              {formatTime(settings.reminderHour, settings.reminderMinute)}
+            </Text>
+          </TouchableOpacity>
         </View>
 
         {/* Support section */}
@@ -134,6 +168,87 @@ export default function SettingsScreen() {
 
         <Text style={styles.version}>Alpha Bravo Quiz v1.0.0</Text>
       </ScrollView>
+
+      <Modal visible={showTimePicker} transparent animationType="fade">
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Set Reminder Time</Text>
+
+            <View style={styles.pickerRow}>
+              <View style={styles.pickerColumn}>
+                <TouchableOpacity
+                  style={styles.pickerArrow}
+                  onPress={() => setPickerHour((h) => (h + 1) % 24)}
+                >
+                  <MaterialCommunityIcons name="chevron-up" size={28} color={COLORS.primary} />
+                </TouchableOpacity>
+                <Text style={styles.pickerValue}>
+                  {(pickerHour % 12 || 12).toString().padStart(2, '0')}
+                </Text>
+                <TouchableOpacity
+                  style={styles.pickerArrow}
+                  onPress={() => setPickerHour((h) => (h - 1 + 24) % 24)}
+                >
+                  <MaterialCommunityIcons name="chevron-down" size={28} color={COLORS.primary} />
+                </TouchableOpacity>
+                <Text style={styles.pickerLabel}>Hour</Text>
+              </View>
+
+              <Text style={styles.pickerColon}>:</Text>
+
+              <View style={styles.pickerColumn}>
+                <TouchableOpacity
+                  style={styles.pickerArrow}
+                  onPress={() => setPickerMinute((m) => (m + 5) % 60)}
+                >
+                  <MaterialCommunityIcons name="chevron-up" size={28} color={COLORS.primary} />
+                </TouchableOpacity>
+                <Text style={styles.pickerValue}>
+                  {pickerMinute.toString().padStart(2, '0')}
+                </Text>
+                <TouchableOpacity
+                  style={styles.pickerArrow}
+                  onPress={() => setPickerMinute((m) => (m - 5 + 60) % 60)}
+                >
+                  <MaterialCommunityIcons name="chevron-down" size={28} color={COLORS.primary} />
+                </TouchableOpacity>
+                <Text style={styles.pickerLabel}>Min</Text>
+              </View>
+
+              <View style={styles.pickerColumn}>
+                <TouchableOpacity
+                  style={styles.pickerArrow}
+                  onPress={() => setPickerHour((h) => (h + 12) % 24)}
+                >
+                  <MaterialCommunityIcons name="chevron-up" size={28} color={COLORS.primary} />
+                </TouchableOpacity>
+                <Text style={styles.pickerValue}>
+                  {pickerHour >= 12 ? 'PM' : 'AM'}
+                </Text>
+                <TouchableOpacity
+                  style={styles.pickerArrow}
+                  onPress={() => setPickerHour((h) => (h + 12) % 24)}
+                >
+                  <MaterialCommunityIcons name="chevron-down" size={28} color={COLORS.primary} />
+                </TouchableOpacity>
+                <Text style={styles.pickerLabel}>{' '}</Text>
+              </View>
+            </View>
+
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={styles.modalButtonCancel}
+                onPress={() => setShowTimePicker(false)}
+              >
+                <Text style={styles.modalButtonCancelText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.modalButtonConfirm} onPress={confirmTime}>
+                <Text style={styles.modalButtonConfirmText}>Set Time</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </GradientBackground>
   );
 }
@@ -241,6 +356,91 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '700',
     color: COLORS.primary,
+  },
+  timeValue: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: COLORS.primaryLight,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    backgroundColor: COLORS.backgroundCard,
+    borderRadius: BORDER_RADIUS.lg,
+    borderWidth: 1,
+    borderColor: COLORS.cardBorder,
+    padding: SPACING.lg,
+    width: 300,
+    alignItems: 'center',
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: COLORS.text,
+    marginBottom: SPACING.lg,
+  },
+  pickerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SPACING.md,
+    marginBottom: SPACING.lg,
+  },
+  pickerColumn: {
+    alignItems: 'center',
+  },
+  pickerArrow: {
+    padding: SPACING.xs,
+  },
+  pickerValue: {
+    fontSize: 28,
+    fontWeight: '700',
+    color: COLORS.text,
+    minWidth: 50,
+    textAlign: 'center',
+  },
+  pickerColon: {
+    fontSize: 28,
+    fontWeight: '700',
+    color: COLORS.textMuted,
+    marginBottom: 20,
+  },
+  pickerLabel: {
+    fontSize: 11,
+    color: COLORS.textMuted,
+    marginTop: 2,
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    gap: SPACING.sm,
+    width: '100%',
+  },
+  modalButtonCancel: {
+    flex: 1,
+    paddingVertical: SPACING.sm + 2,
+    borderRadius: BORDER_RADIUS.md,
+    backgroundColor: COLORS.inputBackground,
+    alignItems: 'center',
+  },
+  modalButtonCancelText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: COLORS.textSecondary,
+  },
+  modalButtonConfirm: {
+    flex: 1,
+    paddingVertical: SPACING.sm + 2,
+    borderRadius: BORDER_RADIUS.md,
+    backgroundColor: COLORS.primary,
+    alignItems: 'center',
+  },
+  modalButtonConfirmText: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: COLORS.text,
   },
   version: {
     textAlign: 'center',

@@ -53,7 +53,7 @@ export async function saveStats(stats: UserStats): Promise<void> {
 }
 
 export function getDefaultSettings(): Settings {
-  return { hapticEnabled: true, soundEnabled: true, notificationsEnabled: false };
+  return { hapticEnabled: true, soundEnabled: true, notificationsEnabled: false, reminderHour: 19, reminderMinute: 0 };
 }
 
 export async function loadSettings(): Promise<Settings> {
@@ -62,6 +62,8 @@ export async function loadSettings(): Promise<Settings> {
     if (raw) {
       const parsed = JSON.parse(raw) as Settings;
       if (parsed.notificationsEnabled === undefined) parsed.notificationsEnabled = false;
+      if (parsed.reminderHour === undefined) parsed.reminderHour = 19;
+      if (parsed.reminderMinute === undefined) parsed.reminderMinute = 0;
       return parsed;
     }
   } catch {

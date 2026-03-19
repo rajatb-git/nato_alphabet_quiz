@@ -36,6 +36,8 @@ export interface Settings {
   hapticEnabled: boolean;
   soundEnabled: boolean;
   notificationsEnabled: boolean;
+  reminderHour: number;
+  reminderMinute: number;
 }
 
 export interface QuizSession {
