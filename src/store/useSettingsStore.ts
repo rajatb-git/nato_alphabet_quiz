@@ -17,6 +17,7 @@ interface SettingsStore {
   setHaptic: (enabled: boolean) => void;
   setSound: (enabled: boolean) => void;
   setNotifications: (enabled: boolean) => Promise<void>;
+  setReminderTime: (hour: number, minute: number) => Promise<void>;
   clearHistory: () => Promise<void>;
 }
 
@@ -45,13 +46,23 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
     if (enabled) {
       const granted = await requestNotificationPermission();
       if (!granted) return;
-      await scheduleDailyReminder();
+      const { reminderHour, reminderMinute } = get().settings;
+      await scheduleDailyReminder(reminderHour, reminderMinute);
     } else {
       await cancelReminders();
     }
     const settings = { ...get().settings, notificationsEnabled: enabled };
     set({ settings });
     saveSettings(settings);
+  },
+
+  setReminderTime: async (hour: number, minute: number) => {
+    const settings = { ...get().settings, reminderHour: hour, reminderMinute: minute };
+    set({ settings });
+    saveSettings(settings);
+    if (settings.notificationsEnabled) {
+      await scheduleDailyReminder(hour, minute);
+    }
   },
 
   clearHistory: async () => {
