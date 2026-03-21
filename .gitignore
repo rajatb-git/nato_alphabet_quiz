@@ -8,6 +8,7 @@ node_modules/
 dist/
 web-build/
 expo-env.d.ts
+gradle-config-temp.gradle
 
 # Native
 .kotlin/
