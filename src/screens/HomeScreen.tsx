@@ -47,7 +47,7 @@ export default function HomeScreen() {
           </View>
           {stats.currentStreak > 0 && (
             <View style={styles.streakBadge}>
-              <Text style={styles.streakIcon}>🔥</Text>
+              <MaterialCommunityIcons name="fire" size={20} color={COLORS.warning} />
               <Text style={styles.streakNum}>{stats.currentStreak}</Text>
             </View>
           )}
@@ -58,18 +58,21 @@ export default function HomeScreen() {
           <StatCard
             label="Today"
             value={todayRecord.totalAttempts}
-            icon="📝"
+            icon="pencil-box-outline"
+            iconColor={COLORS.textSecondary}
           />
           <StatCard
             label="Accuracy"
             value={todayRecord.totalAttempts > 0 ? `${todayAccuracy}%` : '—'}
-            icon="🎯"
+            icon="target"
+            iconColor={COLORS.textSecondary}
             color={todayAccuracy >= 80 ? COLORS.success : todayAccuracy >= 50 ? COLORS.warning : COLORS.textSecondary}
           />
           <StatCard
             label="Sessions"
             value={todayRecord.quizSessions}
-            icon="⚡"
+            icon="lightning-bolt"
+            iconColor={COLORS.textSecondary}
           />
         </View>
 
@@ -293,9 +296,7 @@ const styles = StyleSheet.create({
     paddingVertical: SPACING.sm,
     gap: SPACING.xs,
   },
-  streakIcon: {
-    fontSize: 20,
-  },
+  streakIcon: {},
   streakNum: {
     fontSize: 20,
     fontWeight: '800',

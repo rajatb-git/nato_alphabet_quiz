@@ -46,21 +46,22 @@ export default function StatsScreen() {
 
         {/* Overview cards */}
         <View style={styles.statsRow}>
-          <StatCard label="Total" value={totalAttempts} icon="📝" />
+          <StatCard label="Total" value={totalAttempts} icon="pencil-box-outline" />
           <StatCard
             label="Accuracy"
             value={totalAttempts > 0 ? `${overallAccuracy}%` : '—'}
-            icon="🎯"
+            icon="target"
             color={overallAccuracy >= 80 ? COLORS.success : COLORS.warning}
           />
         </View>
         <View style={styles.statsRow}>
-          <StatCard label="Streak" value={stats.currentStreak} icon="🔥" color={COLORS.warning} />
-          <StatCard label="Best" value={stats.longestStreak} icon="⭐" />
+          <StatCard label="Streak" value={stats.currentStreak} icon="fire" iconColor={COLORS.warning} color={COLORS.warning} />
+          <StatCard label="Best" value={stats.longestStreak} icon="star" iconColor={COLORS.warning} />
           <StatCard
             label="Learned"
             value={`${lettersLearned}/26`}
-            icon="✅"
+            icon="check-circle"
+            iconColor={COLORS.success}
             color={COLORS.success}
           />
         </View>
