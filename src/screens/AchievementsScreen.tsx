@@ -1,6 +1,7 @@
 import React from 'react';
 import { StyleSheet, View, Text, ScrollView } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import GradientBackground from '../components/GradientBackground';
 import { useAchievementsStore } from '../store/useAchievementsStore';
 import { ACHIEVEMENTS } from '../constants/achievements';
@@ -34,7 +35,11 @@ export default function AchievementsScreen() {
             const achievement = achievements.find((a) => a.id === def.id);
             return (
               <View key={def.id} style={[styles.card, !unlocked && styles.cardLocked]}>
-                <Text style={styles.icon}>{unlocked ? def.icon : '🔒'}</Text>
+                <MaterialCommunityIcons
+                  name={unlocked ? def.icon : 'lock'}
+                  size={32}
+                  color={unlocked ? COLORS.primary : COLORS.textMuted}
+                />
                 <Text style={[styles.cardTitle, !unlocked && styles.textLocked]}>
                   {def.title}
                 </Text>
@@ -78,7 +83,6 @@ const styles = StyleSheet.create({
     gap: SPACING.md,
   },
   cardLocked: { opacity: 0.45 },
-  icon: { fontSize: 32 },
   cardTitle: { fontSize: 16, fontWeight: '700', color: COLORS.text },
   cardDesc: { fontSize: 13, color: COLORS.textSecondary, flex: 1 },
   textLocked: { color: COLORS.textMuted },

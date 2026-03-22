@@ -1,18 +1,26 @@
 import React from 'react';
 import { StyleSheet, View, Text } from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { COLORS, SPACING, BORDER_RADIUS } from '../constants/theme';
 
 interface Props {
   label: string;
   value: string | number;
-  icon?: string;
+  icon?: keyof typeof MaterialCommunityIcons.glyphMap;
+  iconColor?: string;
   color?: string;
 }
 
-export default function StatCard({ label, value, icon, color }: Props) {
+export default function StatCard({ label, value, icon, iconColor, color }: Props) {
   return (
     <View style={styles.card}>
-      {icon && <Text style={styles.icon}>{icon}</Text>}
+      {icon && (
+        <MaterialCommunityIcons
+          name={icon}
+          size={24}
+          color={iconColor ?? COLORS.textSecondary}
+        />
+      )}
       <Text style={[styles.value, color ? { color } : null]}>{value}</Text>
       <Text style={styles.label}>{label}</Text>
     </View>
@@ -29,9 +37,6 @@ const styles = StyleSheet.create({
     padding: SPACING.md,
     alignItems: 'center',
     gap: SPACING.xs,
-  },
-  icon: {
-    fontSize: 24,
   },
   value: {
     fontSize: 28,
