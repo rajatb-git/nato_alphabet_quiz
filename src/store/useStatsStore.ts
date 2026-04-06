@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import type { DailyRecord, LetterStat, UserStats } from '../types';
 import { loadStats, saveStats, getDefaultStats } from '../utils/storage';
+import { maybeRequestReview } from '../utils/ratingPrompt';
 import { getTodayDate, getYesterdayDate } from '../utils/helpers';
 
 interface StatsStore {
@@ -94,8 +95,10 @@ export const useStatsStore = create<StatsStore>((set, get) => ({
       morseCompleted: (stats.morseCompleted ?? 0) + (mode === 'morse' ? 1 : 0),
       dailyChallengesCompleted: (stats.dailyChallengesCompleted ?? 0) + (mode === 'daily' ? 1 : 0),
     };
+    const newTotalSessions = newStats.totalSessions ?? 0;
     set({ stats: newStats });
     saveStats(newStats);
+    maybeRequestReview(newTotalSessions);
   },
 
   getWeakLetters: () => {
