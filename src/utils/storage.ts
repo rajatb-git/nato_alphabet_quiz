@@ -6,6 +6,8 @@ const STATS_KEY = '@nato_quiz/user_stats';
 const SETTINGS_KEY = '@nato_quiz/settings';
 const ACHIEVEMENTS_KEY = '@nato_quiz/achievements';
 const DAILY_KEY = '@nato_quiz/daily_challenge';
+const ONBOARDING_KEY = '@nato_quiz/onboarding_done';
+const RATING_SHOWN_KEY = '@nato_quiz/rating_shown';
 
 export function getDefaultStats(): UserStats {
   const letterStats: UserStats['letterStats'] = {};
@@ -106,4 +108,30 @@ export async function saveDailyChallenge(challenge: DailyChallenge): Promise<voi
 
 export async function clearAllData(): Promise<void> {
   await AsyncStorage.multiRemove([STATS_KEY, SETTINGS_KEY, ACHIEVEMENTS_KEY, DAILY_KEY]);
+}
+
+export async function loadOnboardingDone(): Promise<boolean> {
+  try {
+    const val = await AsyncStorage.getItem(ONBOARDING_KEY);
+    return val === 'true';
+  } catch {
+    return false;
+  }
+}
+
+export async function saveOnboardingDone(): Promise<void> {
+  await AsyncStorage.setItem(ONBOARDING_KEY, 'true');
+}
+
+export async function loadRatingShown(): Promise<boolean> {
+  try {
+    const val = await AsyncStorage.getItem(RATING_SHOWN_KEY);
+    return val === 'true';
+  } catch {
+    return false;
+  }
+}
+
+export async function saveRatingShown(): Promise<void> {
+  await AsyncStorage.setItem(RATING_SHOWN_KEY, 'true');
 }

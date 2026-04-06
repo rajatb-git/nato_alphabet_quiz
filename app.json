@@ -3,7 +3,7 @@
     "name": "Alpha Bravo Quiz",
     "slug": "alpha-bravo-quiz",
     "sdkVersion": "55.0.0",
-    "version": "1.2.0",
+    "version": "1.3.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
@@ -13,11 +13,12 @@
       "backgroundColor": "#0f0c29"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.alphabravoquiz.app"
     },
     "android": {
       "package": "com.alphabravoquiz.app",
-      "versionCode": 3,
+      "versionCode": 4,
       "adaptiveIcon": {
         "backgroundColor": "#0f0c29",
         "foregroundImage": "./assets/android-icon-foreground.png",
@@ -27,7 +28,11 @@
       "permissions": [
         "RECEIVE_BOOT_COMPLETED",
         "VIBRATE",
-        "SCHEDULE_EXACT_ALARM"
+        "SCHEDULE_EXACT_ALARM",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.MODIFY_AUDIO_SETTINGS",
+        "android.permission.FOREGROUND_SERVICE",
+        "android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK"
       ],
       "predictiveBackGestureEnabled": false
     },

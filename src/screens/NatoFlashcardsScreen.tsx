@@ -32,7 +32,7 @@ export default function NatoFlashcardsScreen({ navigation }: Props) {
     if (index < cards.length - 1) {
       setIndex(index + 1);
       setFlipped(false);
-      flipAnim.value = withTiming(0, { duration: 150 });
+      flipAnim.value = 0;
     }
   }, [index, cards.length, flipAnim]);
 
@@ -40,7 +40,7 @@ export default function NatoFlashcardsScreen({ navigation }: Props) {
     if (index > 0) {
       setIndex(index - 1);
       setFlipped(false);
-      flipAnim.value = withTiming(0, { duration: 150 });
+      flipAnim.value = 0;
     }
   }, [index, flipAnim]);
 
@@ -53,7 +53,7 @@ export default function NatoFlashcardsScreen({ navigation }: Props) {
     setShuffled(!shuffled);
     setIndex(0);
     setFlipped(false);
-    flipAnim.value = withTiming(0, { duration: 150 });
+    flipAnim.value = 0;
   }, [shuffled, flipAnim]);
 
   const frontStyle = useAnimatedStyle(() => ({
